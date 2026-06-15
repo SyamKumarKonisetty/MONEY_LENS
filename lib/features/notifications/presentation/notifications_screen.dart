@@ -255,7 +255,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'All caught up!',
+              'No notifications',
               style: AppTypography.titleMedium.copyWith(
                 color: context.textPrimaryColor,
                 fontWeight: FontWeight.bold,

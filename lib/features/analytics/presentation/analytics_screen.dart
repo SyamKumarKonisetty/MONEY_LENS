@@ -65,7 +65,7 @@ class AnalyticsScreen extends ConsumerWidget {
               SliverFillRemaining(
                 child: EmptyStateWidget(
                   icon: Icons.bar_chart_rounded,
-                  title: 'No Data Yet',
+                  title: 'No analytics available',
                   subtitle:
                       'Add transactions to see your spending breakdown, trends, and insights here.',
                   accentColor: const Color(0xFF8B5CF6),

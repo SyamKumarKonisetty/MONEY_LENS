@@ -35,124 +35,9 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
 
   void _init() {
     state = state.copyWith(isLoading: true);
-    _repository.watchAllExpenses().listen((expenses) async {
-      final wasSeeded = _prefs.getBool(_seedKey) ?? false;
-      if (expenses.isEmpty && !wasSeeded) {
-        await _seedDatabase();
-      } else {
-        state = ExpenseState(expenses: expenses, isLoading: false);
-      }
+    _repository.watchAllExpenses().listen((expenses) {
+      state = ExpenseState(expenses: expenses, isLoading: false);
     });
-  }
-
-  Future<void> _seedDatabase() async {
-    final seedData = [
-      ExpenseEntity(
-        title: 'Swiggy Order',
-        amount: 485.00,
-        category: 'Food',
-        notes: 'Dinner from Truffles',
-        createdAt: DateTime(2026, 6, 14, 20, 30),
-        updatedAt: DateTime(2026, 6, 14, 20, 30),
-      ),
-      ExpenseEntity(
-        title: 'Uber Ride',
-        amount: 245.00,
-        category: 'Transport',
-        createdAt: DateTime(2026, 6, 14, 9, 15),
-        updatedAt: DateTime(2026, 6, 14, 9, 15),
-      ),
-      ExpenseEntity(
-        title: 'Amazon Shopping',
-        amount: 2340.00,
-        category: 'Shopping',
-        createdAt: DateTime(2026, 6, 13, 14, 45),
-        updatedAt: DateTime(2026, 6, 13, 14, 45),
-      ),
-      ExpenseEntity(
-        title: 'Netflix Subscription',
-        amount: 649.00,
-        category: 'Entertainment',
-        createdAt: DateTime(2026, 6, 12, 11, 0),
-        updatedAt: DateTime(2026, 6, 12, 11, 0),
-      ),
-      ExpenseEntity(
-        title: 'Electricity Bill',
-        amount: 1850.00,
-        category: 'Bills',
-        createdAt: DateTime(2026, 6, 10, 16, 30),
-        updatedAt: DateTime(2026, 6, 10, 16, 30),
-      ),
-      ExpenseEntity(
-        title: 'Apollo Pharmacy',
-        amount: 780.00,
-        category: 'Medical',
-        createdAt: DateTime(2026, 6, 8, 13, 20),
-        updatedAt: DateTime(2026, 6, 8, 13, 20),
-      ),
-      ExpenseEntity(
-        title: 'Udemy Course',
-        amount: 455.00,
-        category: 'Education',
-        createdAt: DateTime(2026, 6, 7, 10, 0),
-        updatedAt: DateTime(2026, 6, 7, 10, 0),
-      ),
-      ExpenseEntity(
-        title: 'Zomato Order',
-        amount: 320.00,
-        category: 'Food',
-        createdAt: DateTime(2026, 6, 4, 19, 45),
-        updatedAt: DateTime(2026, 6, 4, 19, 45),
-      ),
-      ExpenseEntity(
-        title: 'Big Basket',
-        amount: 1650.00,
-        category: 'Groceries',
-        createdAt: DateTime(2026, 5, 25, 14, 0),
-        updatedAt: DateTime(2026, 5, 25, 14, 0),
-      ),
-      ExpenseEntity(
-        title: 'Gym Membership',
-        amount: 2500.00,
-        category: 'Medical',
-        createdAt: DateTime(2026, 5, 20, 9, 0),
-        updatedAt: DateTime(2026, 5, 20, 9, 0),
-      ),
-      ExpenseEntity(
-        title: 'BookMyShow',
-        amount: 890.00,
-        category: 'Entertainment',
-        createdAt: DateTime(2026, 4, 18, 20, 0),
-        updatedAt: DateTime(2026, 4, 18, 20, 0),
-      ),
-      ExpenseEntity(
-        title: 'Flight Ticket',
-        amount: 4200.00,
-        category: 'Travel',
-        notes: 'Trip to Goa',
-        createdAt: DateTime(2026, 3, 15, 8, 0),
-        updatedAt: DateTime(2026, 3, 15, 8, 0),
-      ),
-      ExpenseEntity(
-        title: 'Petrol',
-        amount: 1200.00,
-        category: 'Fuel',
-        createdAt: DateTime(2026, 2, 10, 18, 30),
-        updatedAt: DateTime(2026, 2, 10, 18, 30),
-      ),
-      ExpenseEntity(
-        title: 'Rent Payment',
-        amount: 15000.00,
-        category: 'Bills',
-        createdAt: DateTime(2026, 1, 1, 12, 0),
-        updatedAt: DateTime(2026, 1, 1, 12, 0),
-      ),
-    ];
-
-    for (final expense in seedData) {
-      await _repository.addExpense(expense);
-    }
-    await _prefs.setBool(_seedKey, true);
   }
 
   /// Adds a new expense to local DB.
@@ -185,7 +70,7 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
     String? notes,
     String? transactionType,
   }) async {
-    final original = state.expenses.firstWhere(
+    final original = state.expenses.cast<ExpenseEntity>().firstWhere(
       (e) => e.id == id,
       orElse: () => ExpenseEntity(
         id: id,
@@ -210,6 +95,8 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
 
   /// Deletes an expense from DB.
   Future<void> deleteExpense(int id) async {
+    final updatedExpenses = state.expenses.where((e) => e.id != id).toList();
+    state = state.copyWith(expenses: updatedExpenses);
     await _repository.deleteExpense(id);
   }
 }

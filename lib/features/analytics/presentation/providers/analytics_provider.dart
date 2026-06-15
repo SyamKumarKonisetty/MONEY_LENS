@@ -19,49 +19,60 @@ final analyticsPeriodProvider =
       return AnalyticsPeriodNotifier();
     });
 
-/// Current month summary provider.
+bool _isWithinPeriod(DateTime txDate, AnalyticsPeriod period, DateTime now) {
+  switch (period) {
+    case AnalyticsPeriod.week:
+      final start = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
+      return txDate.isAfter(start.subtract(const Duration(seconds: 1)));
+    case AnalyticsPeriod.month:
+      return txDate.year == now.year && txDate.month == now.month;
+    case AnalyticsPeriod.year:
+      return txDate.year == now.year;
+  }
+}
+
+/// Current summary provider respecting period.
 final monthlySummaryProvider = Provider<MonthlySummary>((ref) {
   final all = ref.watch(allTransactionsProvider);
+  final period = ref.watch(analyticsPeriodProvider);
   final now = DateTime.now();
   
-  final currentMonthExpenses = all
+  final periodExpenses = all
       .where((t) =>
-          t.date.year == now.year &&
-          t.date.month == now.month &&
+          _isWithinPeriod(t.date, period, now) &&
           t.type == TransactionType.expense)
       .fold(0.0, (sum, t) => sum + t.amount);
 
-  final currentMonthIncome = all
+  final periodIncome = all
       .where((t) =>
-          t.date.year == now.year &&
-          t.date.month == now.month &&
+          _isWithinPeriod(t.date, period, now) &&
           t.type == TransactionType.income)
       .fold(0.0, (sum, t) => sum + t.amount);
 
   return MonthlySummary(
     year: now.year,
     month: now.month,
-    totalIncome: currentMonthIncome,
-    totalExpenses: currentMonthExpenses,
+    totalIncome: periodIncome,
+    totalExpenses: periodExpenses,
   );
 });
 
-/// Category spending breakdown provider.
+/// Category spending breakdown provider respecting period.
 final categoryBreakdownProvider = Provider<List<CategorySpending>>((ref) {
   final all = ref.watch(allTransactionsProvider);
+  final period = ref.watch(analyticsPeriodProvider);
   final now = DateTime.now();
   
-  final currentMonthExpenses = all
+  final periodExpenses = all
       .where((t) =>
-          t.date.year == now.year &&
-          t.date.month == now.month &&
+          _isWithinPeriod(t.date, period, now) &&
           t.type == TransactionType.expense)
       .toList();
 
   final totals = <String, double>{};
   var grandTotal = 0.0;
 
-  for (final t in currentMonthExpenses) {
+  for (final t in periodExpenses) {
     totals[t.categoryId] = (totals[t.categoryId] ?? 0.0) + t.amount;
     grandTotal += t.amount;
   }

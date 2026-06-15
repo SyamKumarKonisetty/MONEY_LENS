@@ -47,52 +47,55 @@ class SettingsTile extends StatelessWidget {
               horizontal: AppSpacing.pagePadding,
               vertical: AppSpacing.lg,
             ),
-            child: Row(
-              children: [
-                // Icon container
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: tileIconColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
+            child: Opacity(
+              opacity: onTap == null ? 0.5 : 1.0,
+              child: Row(
+                children: [
+                  // Icon container
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: tileIconColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(icon, color: tileIconColor, size: 17),
                   ),
-                  child: Icon(icon, color: tileIconColor, size: 17),
-                ),
-                const SizedBox(width: AppSpacing.lg),
+                  const SizedBox(width: AppSpacing.lg),
 
-                // Title + subtitle
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: titleColor,
-                        ),
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 2),
+                  // Title + subtitle
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          subtitle!,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: context.textSecondaryColor,
+                          title,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: titleColor,
                           ),
                         ),
+                        if (subtitle != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle!,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: context.textSecondaryColor,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                ),
-
-                // Trailing widget or default chevron
-                trailing ??
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: context.textSecondaryColor,
-                      size: 20,
                     ),
-              ],
+                  ),
+
+                  // Trailing widget or default chevron
+                  trailing ??
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: context.textSecondaryColor,
+                        size: 20,
+                      ),
+                ],
+              ),
             ),
           ),
         ),

@@ -1,6 +1,6 @@
 {
-    "name": "money_lens",
-    "short_name": "money_lens",
+    "name": "MoneyLens",
+    "short_name": "MoneyLens",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

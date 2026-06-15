@@ -61,10 +61,7 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
     final approvedTransactions = <SmsTransaction>[];
     final rejectedTransactions = <SmsTransaction>[];
 
-    // Log values per tasks
-    debugPrint('Pending Count: ${pendingTransactions.length}');
-    debugPrint('Approved Count: ${approvedTransactions.length}');
-    debugPrint('Rejected Count: ${rejectedTransactions.length}');
+
 
     // Filter list by search query
     final filteredInbox = inbox.where((sms) {
@@ -147,9 +144,6 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
                           itemCount: filteredInbox.length,
                           itemBuilder: (context, index) {
                             final transaction = filteredInbox[index];
-                            debugPrint('Rendering transaction: ${transaction.id}');
-                            debugPrint('Amount: ${transaction.amount}');
-                            debugPrint('Merchant: ${transaction.merchant}');
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -170,7 +164,7 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
         Icon(Icons.sms_failed_rounded, size: 48, color: context.textSecondaryColor),
         const SizedBox(height: AppSpacing.lg),
         Text(
-          scanStatus.isScanning ? 'Scanning...' : 'No SMS messages',
+          scanStatus.isScanning ? 'Scanning...' : 'No SMS found',
           style: AppTypography.titleMedium.copyWith(
             color: context.textPrimaryColor,
             fontWeight: FontWeight.bold,

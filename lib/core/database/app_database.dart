@@ -39,7 +39,7 @@ class SavingsGoals extends Table {
 /// Local database instance class utilizing Drift.
 @DriftDatabase(tables: [Expenses, Budgets, SavingsGoals])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   /// Singleton shared instance of the database.
   static final AppDatabase instance = AppDatabase();
@@ -69,6 +69,14 @@ class AppDatabase extends _$AppDatabase {
           }
         },
       );
+
+  Future<void> clearAllData() async {
+    await transaction(() async {
+      await delete(expenses).go();
+      await delete(budgets).go();
+      await delete(savingsGoals).go();
+    });
+  }
 
   static QueryExecutor _openConnection() {
     return driftDatabase(name: 'money_lens');

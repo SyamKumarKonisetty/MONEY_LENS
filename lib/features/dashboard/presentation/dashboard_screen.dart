@@ -147,7 +147,7 @@ class DashboardScreen extends ConsumerWidget {
               SliverFillRemaining(
                 child: EmptyStateWidget(
                   icon: Icons.wallet_rounded,
-                  title: 'No Transactions Yet',
+                  title: 'No transactions yet',
                   subtitle:
                       'Add your first transaction to start building your financial timeline.',
                   actionLabel: 'Add Transaction',

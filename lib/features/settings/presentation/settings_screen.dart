@@ -14,6 +14,8 @@ import '../../sms_detection/presentation/providers/sms_detection_provider.dart';
 import 'widgets/settings_section.dart';
 import 'widgets/settings_tile.dart';
 import 'widgets/theme_selector_widget.dart';
+import '../../auth/presentation/change_pin_sheet.dart';
+import '../../auth/providers/auth_provider.dart';
 
 /// MoneyLens Settings Screen.
 ///
@@ -166,6 +168,31 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
 
+            // ─── Security ──────────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: SettingsSection(
+                title: 'Security',
+                children: [
+                  SettingsTile(
+                    icon: Icons.vpn_key_rounded,
+                    title: 'Change PIN',
+                    subtitle: 'Update your 4-digit app passcode',
+                    iconColor: const Color(0xFF5856D6),
+                    showDivider: false,
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (_) => const ChangePinSheet(),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
+
             // ─── Data ──────────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: SettingsSection(
@@ -173,17 +200,17 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   SettingsTile(
                     icon: Icons.upload_rounded,
-                    title: 'Export Data',
+                    title: 'Export Data (Coming Soon)',
                     subtitle: 'Export as CSV or JSON',
                     iconColor: const Color(0xFF007AFF),
-                    onTap: () {},
+                    onTap: null,
                   ),
                   SettingsTile(
                     icon: Icons.download_rounded,
-                    title: 'Import Data',
+                    title: 'Import Data (Coming Soon)',
                     subtitle: 'Import from CSV or JSON',
                     iconColor: const Color(0xFF6366F1),
-                    onTap: () {},
+                    onTap: null,
                   ),
                   SettingsTile(
                     icon: Icons.delete_outline_rounded,
@@ -191,7 +218,51 @@ class SettingsScreen extends ConsumerWidget {
                     subtitle: 'This action cannot be undone',
                     isDestructive: true,
                     showDivider: false,
-                    onTap: () {},
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          backgroundColor: context.surfaceColor,
+                          title: Text(
+                            'Clear All Data?',
+                            style: AppTypography.titleLarge.copyWith(
+                              color: context.textPrimaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          content: Text(
+                            'This will completely wipe all transactions, analytics, preferences, notifications, security credentials, and reset MoneyLens. This action cannot be undone.',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: context.textSecondaryColor,
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(dialogContext).pop(),
+                              child: Text(
+                                'Cancel',
+                                style: AppTypography.labelLarge.copyWith(
+                                  color: context.textSecondaryColor,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                Navigator.of(dialogContext).pop();
+                                await ref.read(authNotifierProvider.notifier).clearAllAppData();
+                              },
+                              child: Text(
+                                'Clear All',
+                                style: AppTypography.labelLarge.copyWith(
+                                  color: context.errorColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

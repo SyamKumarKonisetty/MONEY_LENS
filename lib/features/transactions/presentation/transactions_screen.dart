@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -45,7 +44,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     Transaction tx,
   ) {
     final expenseState = ref.read(expenseNotifierProvider);
-    final expense = expenseState.expenses.firstWhere(
+    final expense = expenseState.expenses.cast<ExpenseEntity>().firstWhere(
       (e) => e.id.toString() == tx.id,
       orElse: () => ExpenseEntity(
         id: int.tryParse(tx.id),
@@ -100,12 +99,25 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               ),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 final id = int.tryParse(tx.id);
                 if (id != null) {
-                  ref.read(expenseNotifierProvider.notifier).deleteExpense(id);
+                  try {
+                    await ref.read(expenseNotifierProvider.notifier).deleteExpense(id);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Unable to delete transaction'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  }
                 }
-                Navigator.of(context).pop();
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               },
               child: Text(
                 'Delete',
@@ -125,6 +137,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   Widget build(BuildContext context) {
     final grouped = ref.watch(groupedTransactionsProvider);
     final dateKeys = grouped.keys.toList();
+    final filter = ref.watch(transactionFilterProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -179,9 +192,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               SliverFillRemaining(
                 child: EmptyStateWidget(
                   icon: Icons.receipt_long_outlined,
-                  title: 'No Transactions Found',
-                  subtitle:
-                      'Try adjusting your filters, or add a new transaction.',
+                  title: filter == TransactionFilter.expense
+                      ? 'No expenses found'
+                      : 'No transactions yet',
+                  subtitle: filter == TransactionFilter.expense
+                      ? 'Try adjusting your filters, or add a new expense.'
+                      : 'Try adjusting your filters, or add a new transaction.',
                   actionLabel: 'Add Transaction',
                   onAction: () => _openAddBottomSheet(context),
                   accentColor: const Color(0xFF007AFF),
@@ -204,16 +220,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                           baseDelay: 50,
                           child: Dismissible(
                             key: Key(tx.id),
-                            direction: DismissDirection.horizontal,
-                            confirmDismiss: (direction) async {
-                              if (direction == DismissDirection.startToEnd) {
-                                // Swipe Right -> Duplicate
-                                HapticFeedback.mediumImpact();
+                            direction: DismissDirection.endToStart,
+                            onDismissed: (direction) async {
+                              final expenseId = int.tryParse(tx.id);
+                              if (expenseId != null) {
                                 final expenseState = ref.read(expenseNotifierProvider);
-                                final expense = expenseState.expenses.firstWhere(
-                                  (e) => e.id.toString() == tx.id,
+                                final expense = expenseState.expenses.cast<ExpenseEntity>().firstWhere(
+                                  (e) => e.id == expenseId,
                                   orElse: () => ExpenseEntity(
-                                    id: int.tryParse(tx.id),
+                                    id: expenseId,
                                     title: tx.title,
                                     amount: tx.amount,
                                     category: tx.categoryId,
@@ -223,100 +238,50 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                                     transactionType: tx.type == TransactionType.income ? 'income' : 'expense',
                                   ),
                                 );
-                                await ref.read(expenseNotifierProvider.notifier).addExpense(
-                                  title: expense.title,
-                                  amount: expense.amount,
-                                  category: expense.category,
-                                  notes: expense.notes,
-                                  transactionType: expense.transactionType,
-                                );
+
+                                try {
+                                  await ref.read(expenseNotifierProvider.notifier).deleteExpense(expenseId);
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Unable to delete transaction'),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                  return;
+                                }
+
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).clearSnackBars();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Duplicated "${expense.title}"'),
+                                      content: Text('Deleted "${expense.title}"'),
                                       behavior: SnackBarBehavior.floating,
                                       backgroundColor: context.isDark ? const Color(0xFF1C1C1E) : Colors.white,
                                       elevation: 4,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                      duration: const Duration(seconds: 2),
-                                    ),
-                                  );
-                                }
-                                return false; // Slide back immediately
-                              } else {
-                                // Swipe Left -> Delete
-                                HapticFeedback.mediumImpact();
-                                final expenseId = int.tryParse(tx.id);
-                                if (expenseId != null) {
-                                  final expenseState = ref.read(expenseNotifierProvider);
-                                  final expense = expenseState.expenses.firstWhere(
-                                    (e) => e.id == expenseId,
-                                    orElse: () => ExpenseEntity(
-                                      id: expenseId,
-                                      title: tx.title,
-                                      amount: tx.amount,
-                                      category: tx.categoryId,
-                                      notes: tx.note,
-                                      createdAt: tx.date,
-                                      updatedAt: tx.date,
-                                      transactionType: tx.type == TransactionType.income ? 'income' : 'expense',
-                                    ),
-                                  );
-                                  await ref.read(expenseNotifierProvider.notifier).deleteExpense(expenseId);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).clearSnackBars();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Deleted "${expense.title}"'),
-                                        behavior: SnackBarBehavior.floating,
-                                        backgroundColor: context.isDark ? const Color(0xFF1C1C1E) : Colors.white,
-                                        elevation: 4,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                        action: SnackBarAction(
-                                          label: 'Undo',
-                                          textColor: context.primaryColor,
-                                          onPressed: () async {
-                                            await ref.read(expenseNotifierProvider.notifier).addExpense(
-                                              title: expense.title,
-                                              amount: expense.amount,
-                                              category: expense.category,
-                                              notes: expense.notes,
-                                              transactionType: expense.transactionType,
-                                            );
-                                          },
-                                        ),
-                                        duration: const Duration(seconds: 4),
+                                      action: SnackBarAction(
+                                        label: 'Undo',
+                                        textColor: context.primaryColor,
+                                        onPressed: () async {
+                                          await ref.read(expenseNotifierProvider.notifier).addExpense(
+                                            title: expense.title,
+                                            amount: expense.amount,
+                                            category: expense.category,
+                                            notes: expense.notes,
+                                            transactionType: expense.transactionType,
+                                          );
+                                        },
                                       ),
-                                    );
-                                  }
+                                      duration: const Duration(seconds: 4),
+                                    ),
+                                  );
                                 }
-                                return true; // Dismiss
                               }
                             },
                             background: Container(
-                              alignment: Alignment.centerLeft,
-                              padding: const EdgeInsets.only(left: AppSpacing.xl),
-                              decoration: BoxDecoration(
-                                color: context.successColor.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.copy_rounded, color: context.successColor, size: 20),
-                                  const SizedBox(width: AppSpacing.sm),
-                                  Text(
-                                    'Duplicate',
-                                    style: TextStyle(
-                                      color: context.successColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            secondaryBackground: Container(
                               alignment: Alignment.centerRight,
                               padding: const EdgeInsets.only(right: AppSpacing.xl),
                               decoration: BoxDecoration(
