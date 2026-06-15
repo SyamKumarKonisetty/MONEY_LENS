@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../expenses/presentation/providers/expense_provider.dart';
 import '../../../transactions/domain/models.dart';
@@ -18,6 +20,7 @@ class SmsTransaction {
   final TransactionType type;
   final SmsDetectionStatus status;
   final String category;
+  final String senderAddress;
 
   SmsTransaction({
     required this.id,
@@ -29,6 +32,7 @@ class SmsTransaction {
     required this.type,
     required this.status,
     required this.category,
+    this.senderAddress = '',
   });
 
   SmsTransaction copyWith({
@@ -41,6 +45,7 @@ class SmsTransaction {
     TransactionType? type,
     SmsDetectionStatus? status,
     String? category,
+    String? senderAddress,
   }) {
     return SmsTransaction(
       id: id ?? this.id,
@@ -52,6 +57,7 @@ class SmsTransaction {
       type: type ?? this.type,
       status: status ?? this.status,
       category: category ?? this.category,
+      senderAddress: senderAddress ?? this.senderAddress,
     );
   }
 
@@ -65,6 +71,7 @@ class SmsTransaction {
         'type': type.name,
         'status': status.name,
         'category': category,
+        'senderAddress': senderAddress,
       };
 
   factory SmsTransaction.fromJson(Map<String, dynamic> json) => SmsTransaction(
@@ -77,6 +84,7 @@ class SmsTransaction {
         type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
         status: SmsDetectionStatus.values.firstWhere((e) => e.name == json['status']),
         category: json['category'] as String,
+        senderAddress: json['senderAddress'] as String? ?? '',
       );
 }
 
@@ -138,11 +146,63 @@ final smsPrivacySettingsProvider =
   return SmsPrivacySettingsNotifier(prefs);
 });
 
+// ─── SMS Scan Status ───────────────────────────────────────────────────────
+
+class SmsScanStatus {
+  final bool isScanning;
+  final int totalSmsCount;
+  final int financialSmsCount;
+  final int newTransactionCount;
+  final String? errorMessage;
+  final DateTime? lastScanTime;
+
+  SmsScanStatus({
+    this.isScanning = false,
+    this.totalSmsCount = 0,
+    this.financialSmsCount = 0,
+    this.newTransactionCount = 0,
+    this.errorMessage,
+    this.lastScanTime,
+  });
+
+  SmsScanStatus copyWith({
+    bool? isScanning,
+    int? totalSmsCount,
+    int? financialSmsCount,
+    int? newTransactionCount,
+    String? errorMessage,
+    DateTime? lastScanTime,
+  }) {
+    return SmsScanStatus(
+      isScanning: isScanning ?? this.isScanning,
+      totalSmsCount: totalSmsCount ?? this.totalSmsCount,
+      financialSmsCount: financialSmsCount ?? this.financialSmsCount,
+      newTransactionCount: newTransactionCount ?? this.newTransactionCount,
+      errorMessage: errorMessage,
+      lastScanTime: lastScanTime ?? this.lastScanTime,
+    );
+  }
+}
+
+class SmsScanStatusNotifier extends StateNotifier<SmsScanStatus> {
+  SmsScanStatusNotifier() : super(SmsScanStatus());
+
+  void update(SmsScanStatus newStatus) {
+    state = newStatus;
+  }
+}
+
+final smsScanStatusProvider =
+    StateNotifierProvider<SmsScanStatusNotifier, SmsScanStatus>((ref) {
+  return SmsScanStatusNotifier();
+});
+
 // ─── SMS Detection List / State Notifier ───────────────────────────────────
 
 class SmsDetectionNotifier extends StateNotifier<List<SmsTransaction>> {
   final SharedPreferences _prefs;
   final Ref _ref;
+  static const _channel = MethodChannel('com.moneylens/sms');
 
   SmsDetectionNotifier(this._prefs, this._ref) : super([]) {
     _loadSmsInbox();
@@ -155,42 +215,14 @@ class SmsDetectionNotifier extends StateNotifier<List<SmsTransaction>> {
     if (jsonStr != null) {
       try {
         final list = jsonDecode(jsonStr) as List;
-        state = list.map((item) => SmsTransaction.fromJson(item as Map<String, dynamic>)).toList()
+        state = list
+            .map((item) => SmsTransaction.fromJson(item as Map<String, dynamic>))
+            .toList()
           ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
       } catch (_) {
         state = [];
       }
-    } else {
-      _seedDemoInbox();
     }
-  }
-
-  void _seedDemoInbox() {
-    state = [
-      SmsTransaction(
-        id: 'sms_demo1',
-        smsBody: 'Rs.485 debited from Account XX1234 for Swiggy. Ref No: 99812739.',
-        amount: 485.0,
-        merchant: 'Swiggy',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 45)),
-        referenceNumber: '99812739',
-        type: TransactionType.expense,
-        status: SmsDetectionStatus.pending,
-        category: 'Food',
-      ),
-      SmsTransaction(
-        id: 'sms_demo2',
-        smsBody: 'UPI payment of Rs.245 successful to Uber. Ref: 481920.',
-        amount: 245.0,
-        merchant: 'Uber',
-        timestamp: DateTime.now().subtract(const Duration(hours: 3)),
-        referenceNumber: '481920',
-        type: TransactionType.expense,
-        status: SmsDetectionStatus.pending,
-        category: 'Transport',
-      ),
-    ];
-    _saveSmsInbox();
   }
 
   Future<void> _saveSmsInbox() async {
@@ -198,37 +230,158 @@ class SmsDetectionNotifier extends StateNotifier<List<SmsTransaction>> {
     await _prefs.setString(_keySmsList, jsonEncode(list));
   }
 
-  // Parses incoming SMS string on device
-  Future<void> receiveIncomingSms(String smsBody) async {
-    final privacy = _ref.read(smsPrivacySettingsProvider);
-    if (!privacy.detectionEnabled || !privacy.permissionGranted) return;
-
-    // 1. Check parsing
-    final parsed = parseSms(smsBody);
-    if (parsed == null) return;
-
-    // 2. Duplicate Detection
-    final isDuplicate = state.any((t) =>
-        t.amount == parsed.amount &&
-        (t.referenceNumber == parsed.referenceNumber && parsed.referenceNumber.isNotEmpty));
-    if (isDuplicate) return;
-
-    // Add to inbox
-    state = [parsed, ...state];
-    await _saveSmsInbox();
-
-    // Trigger push notification reminder
-    _ref.read(notificationsListProvider.notifier).addNotification(
-          title: '💬 SMS Transaction Detected',
-          body: 'Found ${parsed.type == TransactionType.income ? 'credit' : 'debit'} of ₹${parsed.amount.toStringAsFixed(0)} to ${parsed.merchant}. Tap to review.',
-          type: 'reminder',
-          metadata: {'smsId': parsed.id},
-        );
+  /// Request READ_SMS permission at runtime and update privacy settings.
+  Future<bool> requestSmsPermission() async {
+    final status = await Permission.sms.request();
+    final granted = status.isGranted;
+    await _ref.read(smsPrivacySettingsProvider.notifier).setPermissionGranted(granted);
+    return granted;
   }
 
-  SmsTransaction? parseSms(String body) {
+  /// Check if READ_SMS permission is currently granted (native check).
+  Future<bool> checkNativePermission() async {
+    try {
+      final result = await _channel.invokeMethod<bool>('checkSmsPermission');
+      return result ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Scan the device SMS inbox for financial messages.
+  /// This reads real SMS via the native MethodChannel.
+  Future<void> scanDeviceSmsInbox({int limit = 500}) async {
+    final scanNotifier = _ref.read(smsScanStatusProvider.notifier);
+
+    // Start scanning
+    scanNotifier.update(SmsScanStatus(isScanning: true));
+
+    try {
+      // 1. Check native permission
+      final hasPermission = await checkNativePermission();
+      if (!hasPermission) {
+        scanNotifier.update(SmsScanStatus(
+          isScanning: false,
+          errorMessage: 'SMS permission not granted. Please grant permission from Settings.',
+        ));
+        return;
+      }
+
+      // 2. Read SMS from device via MethodChannel
+      final List<dynamic>? rawMessages = await _channel.invokeMethod<List<dynamic>>(
+        'getSmsMessages',
+        {'limit': limit},
+      );
+
+      if (rawMessages == null || rawMessages.isEmpty) {
+        scanNotifier.update(SmsScanStatus(
+          isScanning: false,
+          totalSmsCount: 0,
+          financialSmsCount: 0,
+          newTransactionCount: 0,
+          lastScanTime: DateTime.now(),
+          errorMessage: 'No SMS messages found on this device.',
+        ));
+        return;
+      }
+
+      final totalSmsCount = rawMessages.length;
+      int financialCount = 0;
+      int newCount = 0;
+
+      // 3. Parse each SMS for financial content
+      for (final raw in rawMessages) {
+        final msg = Map<String, dynamic>.from(raw as Map);
+        final body = msg['body'] as String? ?? '';
+        final address = msg['address'] as String? ?? '';
+        final dateMs = msg['date'] as int? ?? 0;
+        final smsDate = dateMs > 0
+            ? DateTime.fromMillisecondsSinceEpoch(dateMs)
+            : DateTime.now();
+
+        // Try parsing as financial SMS
+        final parsed = parseSms(body, smsDate: smsDate, senderAddress: address);
+        if (parsed == null) continue;
+
+        financialCount++;
+
+        // 4. Duplicate detection - check against existing items
+        final isDuplicate = state.any((existing) =>
+            (existing.amount == parsed.amount &&
+                existing.referenceNumber == parsed.referenceNumber &&
+                parsed.referenceNumber.isNotEmpty) ||
+            (existing.smsBody == parsed.smsBody));
+        if (isDuplicate) continue;
+
+        newCount++;
+        state = [parsed, ...state];
+      }
+
+      // Sort by timestamp descending
+      state = List.from(state)..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      await _saveSmsInbox();
+
+      scanNotifier.update(SmsScanStatus(
+        isScanning: false,
+        totalSmsCount: totalSmsCount,
+        financialSmsCount: financialCount,
+        newTransactionCount: newCount,
+        lastScanTime: DateTime.now(),
+      ));
+
+      // Trigger notification if new transactions were found
+      if (newCount > 0) {
+        _ref.read(notificationsListProvider.notifier).addNotification(
+              title: '📱 SMS Scan Complete',
+              body: 'Found $newCount new financial transaction${newCount > 1 ? 's' : ''} from $financialCount financial SMS (out of $totalSmsCount total).',
+              type: 'reminder',
+              metadata: {'scanCount': newCount.toString()},
+            );
+      }
+    } on PlatformException catch (e) {
+      scanNotifier.update(SmsScanStatus(
+        isScanning: false,
+        errorMessage: 'Platform error: ${e.message}',
+      ));
+    } catch (e) {
+      scanNotifier.update(SmsScanStatus(
+        isScanning: false,
+        errorMessage: 'Unexpected error: $e',
+      ));
+    }
+  }
+
+  /// Parses an SMS body for financial content.
+  /// Returns null if not a financial SMS.
+  SmsTransaction? parseSms(String body, {DateTime? smsDate, String senderAddress = ''}) {
+    // Filter: only parse messages that look financial
+    final bodyLower = body.toLowerCase();
+    final hasFinancialKeyword = bodyLower.contains('debit') ||
+        bodyLower.contains('credit') ||
+        bodyLower.contains('debited') ||
+        bodyLower.contains('credited') ||
+        bodyLower.contains('payment') ||
+        bodyLower.contains('transferred') ||
+        bodyLower.contains('received') ||
+        bodyLower.contains('withdrawal') ||
+        bodyLower.contains('spent') ||
+        bodyLower.contains('txn') ||
+        bodyLower.contains('transaction') ||
+        bodyLower.contains('upi') ||
+        bodyLower.contains('neft') ||
+        bodyLower.contains('imps') ||
+        bodyLower.contains('salary') ||
+        bodyLower.contains('a/c') ||
+        bodyLower.contains('acct') ||
+        bodyLower.contains('account');
+
+    if (!hasFinancialKeyword) return null;
+
     // Look for Amount
-    final amountReg = RegExp(r'(?:Rs\.?|INR)\s*([\d,]+(?:\.\d+)?)', caseSensitive: false);
+    final amountReg = RegExp(
+      r'(?:Rs\.?\s*|INR\.?\s*|₹\s*)([0-9,]+(?:\.\d{1,2})?)',
+      caseSensitive: false,
+    );
     final matchAmount = amountReg.firstMatch(body);
     if (matchAmount == null) return null;
 
@@ -238,66 +391,146 @@ class SmsDetectionNotifier extends StateNotifier<List<SmsTransaction>> {
 
     // Look for Transaction Type
     var type = TransactionType.expense;
-    if (body.toLowerCase().contains('credited') || body.toLowerCase().contains('received')) {
+    if (bodyLower.contains('credited') ||
+        bodyLower.contains('received') ||
+        bodyLower.contains('salary') ||
+        bodyLower.contains('refund')) {
       type = TransactionType.income;
     }
 
-    // Look for Reference Number
-    final refReg = RegExp(r'(?:Ref\D*?|UPI/|Reference\D*?)(\d+)', caseSensitive: false);
+    // Look for Reference Number — extract digits, skipping optional alpha prefix
+    final refReg = RegExp(
+      r'(?:Ref\.?\s*(?:No\.?\s*)?:?\s*|Reference\s*(?:No\.?\s*)?:?\s*|txn\s*(?:id\s*)?:?\s*|UPI/)[A-Za-z]*(\d+)',
+      caseSensitive: false,
+    );
     final matchRef = refReg.firstMatch(body);
     final referenceNumber = matchRef != null ? matchRef.group(1) ?? '' : '';
 
     // Auto-detect Merchant & Category
-    var merchant = 'Merchant';
+    var merchant = 'Unknown';
     var category = 'Other';
 
-    final bodyLower = body.toLowerCase();
-    if (bodyLower.contains('swiggy')) {
-      merchant = 'Swiggy';
-      category = 'Food';
-    } else if (bodyLower.contains('zomato')) {
-      merchant = 'Zomato';
-      category = 'Food';
-    } else if (bodyLower.contains('uber')) {
-      merchant = 'Uber';
-      category = 'Transport';
-    } else if (bodyLower.contains('amazon')) {
-      merchant = 'Amazon';
-      category = 'Shopping';
-    } else if (bodyLower.contains('apollo')) {
-      merchant = 'Apollo';
-      category = 'Medical';
-    } else if (bodyLower.contains('shell') || bodyLower.contains('fuel') || bodyLower.contains('petrol')) {
-      merchant = 'Shell Petrol';
-      category = 'Fuel';
-    } else if (bodyLower.contains('electricity') || bodyLower.contains('bescom') || bodyLower.contains('bill')) {
-      merchant = 'Electricity';
-      category = 'Bills';
-    } else {
-      // Attempt to extract generic merchant after "for" or "to"
-      final merchantReg = RegExp(r'(?:to|for|at)\s+([\w\s]{3,15}?)(?:\.|\s+Ref|\s+UPI|\s+Acc|\Z)', caseSensitive: false);
-      final matchMerch = merchantReg.firstMatch(body);
-      if (matchMerch != null) {
-        merchant = matchMerch.group(1)!.trim();
-        // Capitalize words
-        merchant = merchant.split(' ').map((w) => w.isNotEmpty ? w[0].toUpperCase() + w.substring(1) : '').join(' ');
+    final merchantMappings = {
+      'swiggy': ('Swiggy', 'Food'),
+      'zomato': ('Zomato', 'Food'),
+      'uber': ('Uber', 'Transport'),
+      'ola': ('Ola', 'Transport'),
+      'rapido': ('Rapido', 'Transport'),
+      'amazon': ('Amazon', 'Shopping'),
+      'flipkart': ('Flipkart', 'Shopping'),
+      'myntra': ('Myntra', 'Shopping'),
+      'ajio': ('Ajio', 'Shopping'),
+      'apollo': ('Apollo', 'Medical'),
+      'pharmeasy': ('PharmEasy', 'Medical'),
+      'netmeds': ('Netmeds', 'Medical'),
+      'shell': ('Shell', 'Fuel'),
+      'fuel': ('Fuel Station', 'Fuel'),
+      'petrol': ('Petrol Pump', 'Fuel'),
+      'hp petrol': ('HP Petrol', 'Fuel'),
+      'indian oil': ('Indian Oil', 'Fuel'),
+      'electricity': ('Electricity', 'Bills'),
+      'bescom': ('BESCOM', 'Bills'),
+      'airtel': ('Airtel', 'Bills'),
+      'jio': ('Jio', 'Bills'),
+      'vodafone': ('Vodafone', 'Bills'),
+      'bsnl': ('BSNL', 'Bills'),
+      'netflix': ('Netflix', 'Entertainment'),
+      'spotify': ('Spotify', 'Entertainment'),
+      'hotstar': ('Hotstar', 'Entertainment'),
+      'google play': ('Google Play', 'Entertainment'),
+      'bigbasket': ('BigBasket', 'Groceries'),
+      'blinkit': ('Blinkit', 'Groceries'),
+      'zepto': ('Zepto', 'Groceries'),
+      'instamart': ('Instamart', 'Groceries'),
+      'dmart': ('DMart', 'Groceries'),
+      'paytm': ('Paytm', 'Transfer'),
+      'phonepe': ('PhonePe', 'Transfer'),
+      'gpay': ('GPay', 'Transfer'),
+      'google pay': ('Google Pay', 'Transfer'),
+      'irctc': ('IRCTC', 'Travel'),
+      'makemytrip': ('MakeMyTrip', 'Travel'),
+    };
+
+    for (final entry in merchantMappings.entries) {
+      if (bodyLower.contains(entry.key)) {
+        merchant = entry.value.$1;
+        category = entry.value.$2;
+        break;
       }
     }
 
+    // If no known merchant matched, try extracting from SMS
+    if (merchant == 'Unknown') {
+      final merchantPatterns = [
+        RegExp(r'(?:to|at|for|towards)\s+([A-Za-z][A-Za-z0-9\s]{2,20}?)(?:\s*\.|\s+Ref|\s+UPI|\s+on|\s+via|\s+dated|\s+w\.e\.f|\s*$)', caseSensitive: false),
+        RegExp(r'VPA\s+([a-zA-Z0-9.@]+)', caseSensitive: false),
+      ];
+      for (final pattern in merchantPatterns) {
+        final match = pattern.firstMatch(body);
+        if (match != null) {
+          var extracted = match.group(1)!.trim();
+          // Clean up VPA format
+          if (extracted.contains('@')) {
+            extracted = extracted.split('@').first;
+          }
+          // Capitalize words
+          merchant = extracted
+              .split(RegExp(r'\s+'))
+              .map((w) => w.isNotEmpty ? w[0].toUpperCase() + w.substring(1).toLowerCase() : '')
+              .join(' ')
+              .trim();
+          if (merchant.isEmpty) merchant = 'Unknown';
+          break;
+        }
+      }
+    }
+
+    final ts = smsDate ?? DateTime.now();
+
     return SmsTransaction(
-      id: 'sms_${DateTime.now().millisecondsSinceEpoch}_${(amount * 10).toInt()}',
+      id: 'sms_${ts.millisecondsSinceEpoch}_${(amount * 100).toInt()}_${referenceNumber.hashCode.abs() % 10000}',
       smsBody: body,
       amount: amount,
       merchant: merchant,
-      timestamp: DateTime.now(),
+      timestamp: ts,
       referenceNumber: referenceNumber,
       type: type,
       status: SmsDetectionStatus.pending,
       category: category,
+      senderAddress: senderAddress,
     );
   }
 
-  Future<void> approveTransaction(String id, {String? category, double? amount, String? merchant}) async {
+  /// Process a single incoming SMS (for real-time detection).
+  Future<void> receiveIncomingSms(String smsBody) async {
+    final privacy = _ref.read(smsPrivacySettingsProvider);
+    if (!privacy.detectionEnabled || !privacy.permissionGranted) return;
+
+    final parsed = parseSms(smsBody);
+    if (parsed == null) return;
+
+    // Duplicate Detection
+    final isDuplicate = state.any((t) =>
+        (t.amount == parsed.amount &&
+            t.referenceNumber == parsed.referenceNumber &&
+            parsed.referenceNumber.isNotEmpty) ||
+        (t.smsBody == parsed.smsBody));
+    if (isDuplicate) return;
+
+    state = [parsed, ...state];
+    await _saveSmsInbox();
+
+    _ref.read(notificationsListProvider.notifier).addNotification(
+          title: '💬 SMS Transaction Detected',
+          body:
+              'Found ${parsed.type == TransactionType.income ? 'credit' : 'debit'} of ₹${parsed.amount.toStringAsFixed(0)} to ${parsed.merchant}. Tap to review.',
+          type: 'reminder',
+          metadata: {'smsId': parsed.id},
+        );
+  }
+
+  Future<void> approveTransaction(String id,
+      {String? category, double? amount, String? merchant}) async {
     final list = List<SmsTransaction>.from(state);
     final idx = list.indexWhere((t) => t.id == id);
     if (idx == -1) return;
@@ -307,7 +540,7 @@ class SmsDetectionNotifier extends StateNotifier<List<SmsTransaction>> {
     final finalAmount = amount ?? sms.amount;
     final finalMerchant = merchant ?? sms.merchant;
 
-    // 1. Log transaction in App Database
+    // Log transaction in App Database
     await _ref.read(expenseNotifierProvider.notifier).addExpense(
           title: finalMerchant,
           amount: finalAmount,
@@ -315,7 +548,7 @@ class SmsDetectionNotifier extends StateNotifier<List<SmsTransaction>> {
           notes: 'SMS Auto-detected • Ref: ${sms.referenceNumber}',
         );
 
-    // 2. Update status to approved
+    // Update status to approved
     list[idx] = sms.copyWith(
       status: SmsDetectionStatus.approved,
       category: finalCategory,
@@ -327,7 +560,9 @@ class SmsDetectionNotifier extends StateNotifier<List<SmsTransaction>> {
   }
 
   Future<void> rejectTransaction(String id) async {
-    state = state.map((t) => t.id == id ? t.copyWith(status: SmsDetectionStatus.rejected) : t).toList();
+    state = state
+        .map((t) => t.id == id ? t.copyWith(status: SmsDetectionStatus.rejected) : t)
+        .toList();
     await _saveSmsInbox();
   }
 

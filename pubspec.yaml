@@ -38,6 +38,9 @@ dependencies:
   share_plus: ^13.1.0
   path_provider: ^2.1.5
 
+  # SMS Permission
+  permission_handler: ^11.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

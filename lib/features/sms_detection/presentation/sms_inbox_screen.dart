@@ -19,6 +19,7 @@ class SmsInboxScreen extends ConsumerStatefulWidget {
 class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _hasTriggeredScan = false;
 
   @override
   void initState() {
@@ -32,20 +33,38 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
     super.dispose();
   }
 
+  /// Trigger SMS scan when screen opens and permission is granted.
+  void _triggerAutoScan() {
+    if (_hasTriggeredScan) return;
+    _hasTriggeredScan = true;
+
+    // Use addPostFrameCallback to avoid modifying providers during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(smsDetectionNotifierProvider.notifier).scanDeviceSmsInbox();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final privacy = ref.watch(smsPrivacySettingsProvider);
     final inbox = ref.watch(smsDetectionNotifierProvider);
+    final scanStatus = ref.watch(smsScanStatusProvider);
+
+    // Auto-scan when permission is granted
+    if (privacy.permissionGranted) {
+      _triggerAutoScan();
+    }
 
     return Scaffold(
       backgroundColor: context.backgroundColor,
       body: !privacy.permissionGranted
           ? _buildOnboardingView(context)
-          : _buildSmartInboxView(context, inbox, privacy),
+          : _buildSmartInboxView(context, inbox, privacy, scanStatus),
     );
   }
 
-  // ─── Onboarding Flow (Feature 1) ───────────────────────────────────────────
+  // ─── Onboarding Flow ─────────────────────────────────────────────────────
 
   Widget _buildOnboardingView(BuildContext context) {
     final isDark = context.isDark;
@@ -126,11 +145,31 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
               ),
-              onPressed: () {
+              onPressed: () async {
                 HapticFeedback.mediumImpact();
-                ref.read(smsPrivacySettingsProvider.notifier).setPermissionGranted(true);
+                final messenger = ScaffoldMessenger.of(context);
+                // Request actual runtime permission
+                final granted = await ref
+                    .read(smsDetectionNotifierProvider.notifier)
+                    .requestSmsPermission();
+                if (!mounted) return;
+                if (granted) {
+                  // Permission granted — scan will auto-trigger via build
+                  setState(() {
+                    _hasTriggeredScan = false; // Reset so scan triggers
+                  });
+                } else {
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                          'SMS permission denied. You can grant it from device Settings.'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               },
-              child: const Text('Grant SMS Permission', style: TextStyle(fontWeight: FontWeight.bold)),
+              child:
+                  const Text('Grant SMS Permission', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: AppSpacing.md),
             TextButton(
@@ -164,7 +203,9 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(title,
+                  style: AppTypography.titleMedium
+                      .copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 2),
               Text(desc, style: AppTypography.bodySmall.copyWith(fontSize: 11)),
             ],
@@ -174,12 +215,13 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
     );
   }
 
-  // ─── Smart Inbox View (Feature 8) ─────────────────────────────────────────
+  // ─── Smart Inbox View ────────────────────────────────────────────────────
 
   Widget _buildSmartInboxView(
     BuildContext context,
     List<SmsTransaction> inbox,
     SmsPrivacySettings privacy,
+    SmsScanStatus scanStatus,
   ) {
     final pending = inbox.where((t) => t.status == SmsDetectionStatus.pending).toList();
     final approved = inbox.where((t) => t.status == SmsDetectionStatus.approved).toList();
@@ -193,7 +235,8 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
           elevation: 0,
           pinned: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: context.textPrimaryColor, size: 20),
+            icon: Icon(Icons.arrow_back_ios_new_rounded,
+                color: context.textPrimaryColor, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
@@ -204,11 +247,37 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
             ),
           ),
           actions: [
+            // Refresh / Re-scan button
+            IconButton(
+              icon: scanStatus.isScanning
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.primaryColor,
+                      ),
+                    )
+                  : Icon(Icons.refresh_rounded, color: context.textPrimaryColor, size: 22),
+              onPressed: scanStatus.isScanning
+                  ? null
+                  : () {
+                      HapticFeedback.lightImpact();
+                      setState(() => _hasTriggeredScan = false);
+                      ref.read(smsDetectionNotifierProvider.notifier).scanDeviceSmsInbox();
+                    },
+              tooltip: 'Re-scan SMS',
+            ),
             IconButton(
               icon: Icon(Icons.settings_outlined, color: context.textPrimaryColor, size: 22),
               onPressed: () => _showPrivacySettingsDialog(context, privacy),
             ),
           ],
+        ),
+
+        // Scan Status Banner
+        SliverToBoxAdapter(
+          child: _buildScanStatusBanner(context, scanStatus),
         ),
 
         // Tabs
@@ -235,7 +304,7 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
           child: TabBarView(
             controller: _tabController,
             children: [
-              _buildPendingList(context, pending),
+              _buildPendingList(context, pending, scanStatus),
               _buildStatusList(context, approved, 'No approved transactions yet.'),
               _buildStatusList(context, rejected, 'No rejected transactions yet.'),
             ],
@@ -245,7 +314,112 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
     );
   }
 
-  Widget _buildPendingList(BuildContext context, List<SmsTransaction> pending) {
+  Widget _buildScanStatusBanner(BuildContext context, SmsScanStatus status) {
+    if (status.isScanning) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: context.primaryColor.withValues(alpha: 0.08),
+          borderRadius: AppRadius.card,
+          border: Border.all(color: context.primaryColor.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: context.primaryColor,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                'Scanning device SMS inbox...',
+                style: AppTypography.bodySmall.copyWith(
+                  color: context.primaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (status.errorMessage != null) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: context.errorColor.withValues(alpha: 0.08),
+          borderRadius: AppRadius.card,
+          border: Border.all(color: context.errorColor.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: context.errorColor, size: 18),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                status.errorMessage!,
+                style: AppTypography.bodySmall.copyWith(
+                  color: context.errorColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (status.lastScanTime != null) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: context.successColor.withValues(alpha: 0.08),
+          borderRadius: AppRadius.card,
+          border: Border.all(color: context.successColor.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.check_circle_outline_rounded, color: context.successColor, size: 18),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Scan complete • ${DateFormat('h:mm a').format(status.lastScanTime!)}',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: context.successColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${status.totalSmsCount} total SMS → ${status.financialSmsCount} financial → ${status.newTransactionCount} new',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: context.textSecondaryColor,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildPendingList(BuildContext context, List<SmsTransaction> pending, SmsScanStatus scanStatus) {
     if (pending.isEmpty) {
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -260,7 +434,11 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            'Inbox is Clear!',
+            scanStatus.isScanning
+                ? 'Scanning...'
+                : scanStatus.lastScanTime != null
+                    ? 'No Pending Transactions'
+                    : 'Inbox is Clear!',
             style: AppTypography.titleMedium.copyWith(
               color: context.textPrimaryColor,
               fontWeight: FontWeight.bold,
@@ -268,7 +446,9 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Use the Simulator below to trigger simulated incoming SMS transactions.',
+            scanStatus.lastScanTime != null
+                ? 'All detected transactions have been reviewed.\nTap refresh (↻) to re-scan.'
+                : 'Tap the refresh button to scan your SMS inbox, or use the simulator below.',
             style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor),
             textAlign: TextAlign.center,
           ),
@@ -301,12 +481,14 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
   Widget _buildStatusList(BuildContext context, List<SmsTransaction> list, String emptyText) {
     if (list.isEmpty) {
       return Center(
-        child: Text(emptyText, style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor)),
+        child: Text(emptyText,
+            style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor)),
       );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.pagePadding, vertical: AppSpacing.sm),
       itemCount: list.length,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, idx) {
@@ -336,12 +518,14 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
                   children: [
                     Text(
                       item.merchant,
-                      style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: AppTypography.titleMedium
+                          .copyWith(fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Ref: ${item.referenceNumber} • ${DateFormat('yyyy-MM-dd HH:mm').format(item.timestamp)}',
-                      style: AppTypography.labelSmall.copyWith(color: context.textSecondaryColor, fontSize: 10),
+                      '${item.category} • ${DateFormat('MMM d, h:mm a').format(item.timestamp)}',
+                      style: AppTypography.labelSmall
+                          .copyWith(color: context.textSecondaryColor, fontSize: 10),
                     ),
                   ],
                 ),
@@ -374,7 +558,8 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
       color: context.surfaceColor,
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.card,
-        side: BorderSide(color: context.separatorColor.withValues(alpha: context.isDark ? 0.3 : 0.6)),
+        side: BorderSide(
+            color: context.separatorColor.withValues(alpha: context.isDark ? 0.3 : 0.6)),
       ),
       elevation: 0,
       child: Padding(
@@ -388,14 +573,16 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
                 const SizedBox(width: 8),
                 Text(
                   'SMS Simulator (Offline Demo)',
-                  style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: AppTypography.titleMedium
+                      .copyWith(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Tap a mock message below to simulate a bank SMS arriving. The parser will extract transaction fields instantly.',
-              style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor, fontSize: 11),
+              style:
+                  AppTypography.bodySmall.copyWith(color: context.textSecondaryColor, fontSize: 11),
             ),
             const SizedBox(height: AppSpacing.md),
             ...simulatorList.map((sms) {
@@ -455,7 +642,8 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
           children: [
             SwitchListTile(
               title: const Text('Enable Auto Detection'),
-              subtitle: const Text('Allow parser to extract details locally from new messages.'),
+              subtitle:
+                  const Text('Allow parser to extract details locally from new messages.'),
               value: privacy.detectionEnabled,
               onChanged: (val) {
                 ref.read(smsPrivacySettingsProvider.notifier).setDetectionEnabled(val);
@@ -469,7 +657,8 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
               onTap: () {
                 ref.read(smsDetectionNotifierProvider.notifier).clearCache();
                 Navigator.of(ctx).pop();
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SMS Cache Cleared')));
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text('SMS Cache Cleared')));
               },
             ),
             ListTile(
@@ -479,7 +668,8 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
                 ref.read(smsDetectionNotifierProvider.notifier).deleteParsedData();
                 ref.read(smsPrivacySettingsProvider.notifier).setPermissionGranted(false);
                 Navigator.of(ctx).pop();
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All parsed SMS data deleted')));
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text('All parsed SMS data deleted')));
               },
             ),
           ],
@@ -489,7 +679,7 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen>
   }
 }
 
-// ─── Review Card (Feature 5) ─────────────────────────────────────────────────
+// ─── Review Card ───────────────────────────────────────────────────────────
 
 class _PendingReviewCard extends ConsumerStatefulWidget {
   final SmsTransaction transaction;
@@ -510,7 +700,8 @@ class _PendingReviewCardState extends ConsumerState<_PendingReviewCard> {
   void initState() {
     super.initState();
     _merchantController = TextEditingController(text: widget.transaction.merchant);
-    _amountController = TextEditingController(text: widget.transaction.amount.toStringAsFixed(0));
+    _amountController =
+        TextEditingController(text: widget.transaction.amount.toStringAsFixed(0));
     _category = widget.transaction.category;
   }
 
@@ -525,7 +716,24 @@ class _PendingReviewCardState extends ConsumerState<_PendingReviewCard> {
   Widget build(BuildContext context) {
     final t = widget.transaction;
 
-    final categories = ['Food', 'Transport', 'Shopping', 'Bills', 'Fuel', 'Medical', 'Other'];
+    final categories = [
+      'Food',
+      'Transport',
+      'Shopping',
+      'Bills',
+      'Fuel',
+      'Medical',
+      'Entertainment',
+      'Groceries',
+      'Travel',
+      'Transfer',
+      'Other',
+    ];
+
+    // Ensure current category is in the list
+    if (!categories.contains(_category)) {
+      categories.add(_category);
+    }
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -546,21 +754,41 @@ class _PendingReviewCardState extends ConsumerState<_PendingReviewCard> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
                 decoration: BoxDecoration(
-                  color: context.primaryColor.withValues(alpha: 0.12),
+                  color: (t.type == TransactionType.income
+                          ? context.successColor
+                          : context.errorColor)
+                      .withValues(alpha: 0.12),
                   borderRadius: AppRadius.circularFull,
                 ),
                 child: Text(
-                  t.type == TransactionType.income ? 'Credit Detected' : 'Debit Detected',
+                  t.type == TransactionType.income ? '↓ Credit Detected' : '↑ Debit Detected',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: context.primaryColor,
+                    color: t.type == TransactionType.income
+                        ? context.successColor
+                        : context.errorColor,
                   ),
                 ),
               ),
-              Text(
-                DateFormat('jm').format(t.timestamp),
-                style: AppTypography.labelSmall.copyWith(color: context.textSecondaryColor),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    DateFormat('MMM d').format(t.timestamp),
+                    style: AppTypography.labelSmall.copyWith(
+                      color: context.textSecondaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    DateFormat('h:mm a').format(t.timestamp),
+                    style: AppTypography.labelSmall.copyWith(
+                      color: context.textSecondaryColor,
+                      fontSize: 9,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -568,14 +796,23 @@ class _PendingReviewCardState extends ConsumerState<_PendingReviewCard> {
 
           if (!_isEditing) ...[
             Text(
-              '₹${t.amount.toStringAsFixed(0)} at ${t.merchant}',
+              '₹${t.amount.toStringAsFixed(t.amount == t.amount.truncateToDouble() ? 0 : 2)} at ${t.merchant}',
               style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             const SizedBox(height: 4),
             Text(
-              'Category: $categoryEmoji $_category',
-              style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600, color: context.primaryColor),
+              '${_categoryEmoji(_category)} $_category',
+              style: AppTypography.bodySmall
+                  .copyWith(fontWeight: FontWeight.w600, color: context.primaryColor),
             ),
+            if (t.senderAddress.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                'From: ${t.senderAddress}',
+                style: AppTypography.labelSmall
+                    .copyWith(color: context.textSecondaryColor, fontSize: 9),
+              ),
+            ],
           ] else ...[
             TextField(
               controller: _merchantController,
@@ -615,6 +852,8 @@ class _PendingReviewCardState extends ConsumerState<_PendingReviewCard> {
           Text(
             t.smsBody,
             style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.grey),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: AppSpacing.lg),
 
@@ -676,8 +915,8 @@ class _PendingReviewCardState extends ConsumerState<_PendingReviewCard> {
     );
   }
 
-  String get categoryEmoji {
-    switch (_category.toLowerCase()) {
+  String _categoryEmoji(String category) {
+    switch (category.toLowerCase()) {
       case 'food':
         return '🍔';
       case 'transport':
@@ -690,6 +929,14 @@ class _PendingReviewCardState extends ConsumerState<_PendingReviewCard> {
         return '⛽';
       case 'medical':
         return '🏥';
+      case 'entertainment':
+        return '🎬';
+      case 'groceries':
+        return '🥬';
+      case 'travel':
+        return '✈️';
+      case 'transfer':
+        return '💸';
       default:
         return '📦';
     }
