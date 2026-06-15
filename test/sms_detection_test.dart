@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:money_lens/features/sms_detection/presentation/providers/sms_detection_provider.dart';
 import 'package:money_lens/features/settings/presentation/providers/settings_provider.dart';
-import 'package:money_lens/features/transactions/domain/models.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('SMS Detection & Parsing Tests', () {
+  group('Simple SMS Detection MVP Tests', () {
     late SharedPreferences prefs;
 
     setUp(() async {
@@ -16,7 +15,7 @@ void main() {
       prefs = await SharedPreferences.getInstance();
     });
 
-    test('Parser correctly extracts Swiggy Debit SMS details', () {
+    test('Parser correctly extracts amount from expense SMS', () {
       final container = ProviderContainer(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
@@ -24,18 +23,17 @@ void main() {
       );
       final notifier = container.read(smsDetectionNotifierProvider.notifier);
 
-      const sms = 'Rs.499 debited from Account XX1234 for Swiggy. Ref No: 99812739.';
+      const sms = 'Sent Rs.129.00\nFrom HDFC Bank A/C *1712';
       final parsed = notifier.parseSms(sms);
 
       expect(parsed, isNotNull);
-      expect(parsed!.amount, 499.0);
-      expect(parsed.merchant, 'Swiggy');
-      expect(parsed.referenceNumber, '99812739');
-      expect(parsed.type, TransactionType.expense);
-      expect(parsed.category, 'Food');
+      expect(parsed.amount, 129.0);
+      expect(parsed.merchant, isNull);
+      expect(parsed.type, isNull);
+      expect(parsed.parserFailed, isFalse);
     });
 
-    test('Parser correctly extracts Uber UPI SMS details', () {
+    test('Parser correctly extracts amount from income SMS', () {
       final container = ProviderContainer(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
@@ -43,18 +41,17 @@ void main() {
       );
       final notifier = container.read(smsDetectionNotifierProvider.notifier);
 
-      const sms = 'UPI payment of Rs.245.50 successful to Uber. Ref: 481920.';
+      const sms = 'Credit Alert!\nRs.2010.00 credited to HDFC Bank A/c XX1712';
       final parsed = notifier.parseSms(sms);
 
       expect(parsed, isNotNull);
-      expect(parsed!.amount, 245.50);
-      expect(parsed.merchant, 'Uber');
-      expect(parsed.referenceNumber, '481920');
-      expect(parsed.type, TransactionType.expense);
-      expect(parsed.category, 'Transport');
+      expect(parsed.amount, 2010.0);
+      expect(parsed.merchant, isNull);
+      expect(parsed.type, isNull);
+      expect(parsed.parserFailed, isFalse);
     });
 
-    test('Parser correctly extracts Credit / Income SMS details', () {
+    test('Parser sets amount to null and parserFailed to true if amount fails to parse', () {
       final container = ProviderContainer(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
@@ -62,13 +59,12 @@ void main() {
       );
       final notifier = container.read(smsDetectionNotifierProvider.notifier);
 
-      const sms = 'Salary of Rs.75000 credited to Account XX9876. Ref: UPI772211.';
+      const sms = 'Sent Rs.abc\nFrom HDFC Bank';
       final parsed = notifier.parseSms(sms);
 
       expect(parsed, isNotNull);
-      expect(parsed!.amount, 75000.0);
-      expect(parsed.type, TransactionType.income);
-      expect(parsed.referenceNumber, '772211');
+      expect(parsed.amount, isNull);
+      expect(parsed.parserFailed, isTrue);
     });
   });
 }

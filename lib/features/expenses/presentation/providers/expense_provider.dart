@@ -185,7 +185,18 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
     String? notes,
     String? transactionType,
   }) async {
-    final original = state.expenses.firstWhere((e) => e.id == id);
+    final original = state.expenses.firstWhere(
+      (e) => e.id == id,
+      orElse: () => ExpenseEntity(
+        id: id,
+        title: title,
+        amount: amount,
+        category: category,
+        notes: notes,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
     final expense = original.copyWith(
       title: title,
       amount: amount,

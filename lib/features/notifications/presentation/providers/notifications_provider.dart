@@ -2,12 +2,20 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 import '../../domain/entities/notification_item.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../../transactions/domain/models.dart';
 import '../../../budget/presentation/providers/budget_provider.dart';
 import '../../../reports/presentation/providers/reports_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+
+String _normalizeDate(String input) {
+  final parts = input.split('-');
+  if (parts.length != 3) return input;
+
+  return '${parts[0]}-${parts[1].padLeft(2, '0')}-${parts[2].padLeft(2, '0')}';
+}
 
 // ─── Notification Settings ──────────────────────────────────────────────────
 
@@ -16,12 +24,16 @@ class NotificationSettings {
   final TimeOfDay dailyTime;
   final String weeklyDayAndTime; // e.g. "Sunday 10:00"
   final String monthlyDayAndTime; // e.g. "Last Day 10:00"
+  final String reminderFrequency; // "Daily", "Weekly", "Monthly", "Never"
+  final TimeOfDay reminderTime;
 
   NotificationSettings({
     this.enabled = true,
     this.dailyTime = const TimeOfDay(hour: 20, minute: 0),
     this.weeklyDayAndTime = 'Sunday 10:00',
     this.monthlyDayAndTime = 'Last Day 10:00',
+    this.reminderFrequency = 'Daily',
+    this.reminderTime = const TimeOfDay(hour: 20, minute: 0),
   });
 
   NotificationSettings copyWith({
@@ -29,12 +41,16 @@ class NotificationSettings {
     TimeOfDay? dailyTime,
     String? weeklyDayAndTime,
     String? monthlyDayAndTime,
+    String? reminderFrequency,
+    TimeOfDay? reminderTime,
   }) {
     return NotificationSettings(
       enabled: enabled ?? this.enabled,
       dailyTime: dailyTime ?? this.dailyTime,
       weeklyDayAndTime: weeklyDayAndTime ?? this.weeklyDayAndTime,
       monthlyDayAndTime: monthlyDayAndTime ?? this.monthlyDayAndTime,
+      reminderFrequency: reminderFrequency ?? this.reminderFrequency,
+      reminderTime: reminderTime ?? this.reminderTime,
     );
   }
 }
@@ -51,6 +67,9 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
   static const String _keyDailyMinute = 'notif_daily_minute';
   static const String _keyWeekly = 'notif_weekly';
   static const String _keyMonthly = 'notif_monthly';
+  static const String _keyReminderFrequency = 'notif_reminder_freq';
+  static const String _keyReminderHour = 'notif_reminder_hour';
+  static const String _keyReminderMinute = 'notif_reminder_minute';
 
   void _loadSettings() {
     final enabled = _prefs.getBool(_keyEnabled) ?? true;
@@ -58,12 +77,17 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
     final minute = _prefs.getInt(_keyDailyMinute) ?? 0;
     final weekly = _prefs.getString(_keyWeekly) ?? 'Sunday 10:00';
     final monthly = _prefs.getString(_keyMonthly) ?? 'Last Day 10:00';
+    final freq = _prefs.getString(_keyReminderFrequency) ?? 'Daily';
+    final remHour = _prefs.getInt(_keyReminderHour) ?? 20;
+    final remMin = _prefs.getInt(_keyReminderMinute) ?? 0;
 
     state = NotificationSettings(
       enabled: enabled,
       dailyTime: TimeOfDay(hour: hour, minute: minute),
       weeklyDayAndTime: weekly,
       monthlyDayAndTime: monthly,
+      reminderFrequency: freq,
+      reminderTime: TimeOfDay(hour: remHour, minute: remMin),
     );
   }
 
@@ -86,6 +110,17 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
   Future<void> setMonthlyTime(String val) async {
     await _prefs.setString(_keyMonthly, val);
     state = state.copyWith(monthlyDayAndTime: val);
+  }
+
+  Future<void> setReminderFrequency(String val) async {
+    await _prefs.setString(_keyReminderFrequency, val);
+    state = state.copyWith(reminderFrequency: val);
+  }
+
+  Future<void> setReminderTime(TimeOfDay time) async {
+    await _prefs.setInt(_keyReminderHour, time.hour);
+    await _prefs.setInt(_keyReminderMinute, time.minute);
+    state = state.copyWith(reminderTime: time);
   }
 }
 
@@ -318,10 +353,16 @@ class StreakNotifier extends StateNotifier<StreakState> {
     final lastLoginStr = _prefs.getString(_keyLastLoginDate);
     var streak = _prefs.getInt(_keyLoginStreak) ?? 0;
     final today = DateTime.now();
-    final todayStr = '${today.year}-${today.month}-${today.day}';
+    final todayStr = DateFormat('yyyy-MM-dd').format(today);
 
     if (lastLoginStr != null) {
-      final lastLogin = DateTime.parse(lastLoginStr);
+      DateTime lastLogin;
+      try {
+        lastLogin = DateTime.parse(_normalizeDate(lastLoginStr));
+      } catch (e) {
+        debugPrint('Invalid date: $lastLoginStr');
+        lastLogin = DateTime.now();
+      }
       final lastLoginDay = DateTime(lastLogin.year, lastLogin.month, lastLogin.day);
       final currentDay = DateTime(today.year, today.month, today.day);
       final diff = currentDay.difference(lastLoginDay).inDays;

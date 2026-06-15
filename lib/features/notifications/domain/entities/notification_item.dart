@@ -1,3 +1,12 @@
+import 'package:flutter/foundation.dart';
+
+String normalizeDate(String input) {
+  final parts = input.split('-');
+  if (parts.length != 3) return input;
+
+  return '${parts[0]}-${parts[1].padLeft(2, '0')}-${parts[2].padLeft(2, '0')}';
+}
+
 class NotificationItem {
   final String id;
   final String title;
@@ -47,15 +56,26 @@ class NotificationItem {
         'metadata': metadata,
       };
 
-  factory NotificationItem.fromJson(Map<String, dynamic> json) => NotificationItem(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        body: json['body'] as String,
-        timestamp: DateTime.parse(json['timestamp'] as String),
-        isRead: json['isRead'] as bool? ?? false,
-        type: json['type'] as String,
-        metadata: (json['metadata'] as Map<String, dynamic>?)?.map(
-          (k, v) => MapEntry(k, v as String),
-        ),
-      );
+  factory NotificationItem.fromJson(Map<String, dynamic> json) {
+    final dateString = json['timestamp'] as String? ?? '';
+    DateTime parsedDate;
+    try {
+      parsedDate = DateTime.parse(normalizeDate(dateString));
+    } catch (e) {
+      debugPrint('Invalid date: $dateString');
+      parsedDate = DateTime.now();
+    }
+
+    return NotificationItem(
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      body: json['body'] as String? ?? '',
+      timestamp: parsedDate,
+      isRead: json['isRead'] as bool? ?? false,
+      type: json['type'] as String? ?? '',
+      metadata: (json['metadata'] as Map<String, dynamic>?)?.map(
+        (k, v) => MapEntry(k, v as String),
+      ),
+    );
+  }
 }

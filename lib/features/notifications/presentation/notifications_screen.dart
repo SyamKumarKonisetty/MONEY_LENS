@@ -9,6 +9,7 @@ import '../../../core/extensions/context_extensions.dart';
 import 'providers/notifications_provider.dart';
 import 'settings/reminder_settings_sheet.dart';
 import '../domain/entities/notification_item.dart';
+import '../../transactions/presentation/widgets/add_expense_bottom_sheet.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
@@ -359,6 +360,33 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                             color: context.textSecondaryColor,
                           ),
                         ),
+                        if (item.type == 'reminder') ...[
+                          const SizedBox(height: AppSpacing.md),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  ref.read(notificationsListProvider.notifier).deleteNotification(item.id);
+                                },
+                                child: const Text('Skip', style: TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: context.primaryColor,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+                                ),
+                                onPressed: () {
+                                  ref.read(notificationsListProvider.notifier).markAsRead(item.id);
+                                  showAddTransactionSheet(context);
+                                },
+                                child: const Text('Add Expense', style: TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: 4),
                         Text(
                           DateFormat('yyyy-MM-dd').format(item.timestamp),

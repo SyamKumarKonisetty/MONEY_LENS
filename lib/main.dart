@@ -49,6 +49,7 @@ class MoneyLensApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeNotifierProvider);
+    final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
       // App metadata
@@ -61,7 +62,7 @@ class MoneyLensApp extends ConsumerWidget {
       themeMode: themeMode,
 
       // Navigation
-      routerConfig: appRouter,
+      routerConfig: router,
 
       // Localization support (for currency formatting)
       supportedLocales: const [Locale('en', 'IN'), Locale('en', 'US')],

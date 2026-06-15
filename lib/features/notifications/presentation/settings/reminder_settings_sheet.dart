@@ -83,6 +83,36 @@ class ReminderSettingsSheet extends ConsumerWidget {
               absorbing: !settings.enabled,
               child: Column(
                 children: [
+                  // Reminder Frequency
+                  _buildSettingTile(
+                    context,
+                    icon: Icons.repeat_rounded,
+                    title: 'Reminder Frequency',
+                    subtitle: settings.reminderFrequency,
+                    onTap: () {
+                      _showFrequencyPicker(context, ref, settings.reminderFrequency);
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Reminder Time
+                  _buildSettingTile(
+                    context,
+                    icon: Icons.alarm_rounded,
+                    title: 'Reminder Time',
+                    subtitle: settings.reminderTime.format(context),
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: settings.reminderTime,
+                      );
+                      if (picked != null) {
+                        await notifier.setReminderTime(picked);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
                   // Daily summary reminder
                   _buildSettingTile(
                     context,
@@ -166,6 +196,30 @@ class ReminderSettingsSheet extends ConsumerWidget {
           ],
         ),
         onTap: onTap,
+      ),
+    );
+  }
+
+  void _showFrequencyPicker(BuildContext context, WidgetRef ref, String current) {
+    final options = ['Daily', 'Weekly', 'Monthly', 'Never'];
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.surfaceColor,
+        title: const Text('Choose Reminder Frequency'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: options.map((opt) {
+            return ListTile(
+              title: Text(opt),
+              trailing: current == opt ? Icon(Icons.check_rounded, color: context.primaryColor) : null,
+              onTap: () {
+                ref.read(notificationSettingsProvider.notifier).setReminderFrequency(opt);
+                Navigator.of(ctx).pop();
+              },
+            );
+          }).toList(),
+        ),
       ),
     );
   }

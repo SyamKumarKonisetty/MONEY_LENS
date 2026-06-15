@@ -9,6 +9,7 @@ import '../../../core/widgets/search_bar_widget.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../expenses/presentation/providers/expense_provider.dart';
+import '../../expenses/domain/entities/expense_entity.dart';
 import '../domain/models.dart';
 import 'providers/transactions_provider.dart';
 import 'widgets/filter_chip_bar.dart';
@@ -46,6 +47,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final expenseState = ref.read(expenseNotifierProvider);
     final expense = expenseState.expenses.firstWhere(
       (e) => e.id.toString() == tx.id,
+      orElse: () => ExpenseEntity(
+        id: int.tryParse(tx.id),
+        title: tx.title,
+        amount: tx.amount,
+        category: tx.categoryId,
+        notes: tx.note,
+        createdAt: tx.date,
+        updatedAt: tx.date,
+        transactionType: tx.type == TransactionType.income ? 'income' : 'expense',
+      ),
     );
     showModalBottomSheet(
       context: context,
@@ -201,6 +212,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                                 final expenseState = ref.read(expenseNotifierProvider);
                                 final expense = expenseState.expenses.firstWhere(
                                   (e) => e.id.toString() == tx.id,
+                                  orElse: () => ExpenseEntity(
+                                    id: int.tryParse(tx.id),
+                                    title: tx.title,
+                                    amount: tx.amount,
+                                    category: tx.categoryId,
+                                    notes: tx.note,
+                                    createdAt: tx.date,
+                                    updatedAt: tx.date,
+                                    transactionType: tx.type == TransactionType.income ? 'income' : 'expense',
+                                  ),
                                 );
                                 await ref.read(expenseNotifierProvider.notifier).addExpense(
                                   title: expense.title,
@@ -229,7 +250,19 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                                 final expenseId = int.tryParse(tx.id);
                                 if (expenseId != null) {
                                   final expenseState = ref.read(expenseNotifierProvider);
-                                  final expense = expenseState.expenses.firstWhere((e) => e.id == expenseId);
+                                  final expense = expenseState.expenses.firstWhere(
+                                    (e) => e.id == expenseId,
+                                    orElse: () => ExpenseEntity(
+                                      id: expenseId,
+                                      title: tx.title,
+                                      amount: tx.amount,
+                                      category: tx.categoryId,
+                                      notes: tx.note,
+                                      createdAt: tx.date,
+                                      updatedAt: tx.date,
+                                      transactionType: tx.type == TransactionType.income ? 'income' : 'expense',
+                                    ),
+                                  );
                                   await ref.read(expenseNotifierProvider.notifier).deleteExpense(expenseId);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).clearSnackBars();
