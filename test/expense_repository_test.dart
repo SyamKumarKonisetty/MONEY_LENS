@@ -50,9 +50,7 @@ void main() {
 
     test('ExpenseNotifier seeds, deletes, and updates state reactively', () async {
       SharedPreferences.setMockInitialValues({'db_seeded': true});
-      final prefs = await SharedPreferences.getInstance();
-      
-      final notifier = ExpenseNotifier(repository, prefs);
+      final notifier = ExpenseNotifier(repository);
       
       // Wait for initialization and stream listener
       await Future<void>.delayed(const Duration(milliseconds: 50));

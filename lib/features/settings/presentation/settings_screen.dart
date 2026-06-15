@@ -16,6 +16,9 @@ import 'widgets/settings_tile.dart';
 import 'widgets/theme_selector_widget.dart';
 import '../../auth/presentation/change_pin_sheet.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/backup_helper.dart';
+import '../../expenses/presentation/providers/expense_provider.dart';
+import '../../budget/presentation/providers/budget_provider.dart';
 
 /// MoneyLens Settings Screen.
 ///
@@ -200,17 +203,123 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   SettingsTile(
                     icon: Icons.upload_rounded,
-                    title: 'Export Data (Coming Soon)',
-                    subtitle: 'Export as CSV or JSON',
+                    title: 'Export Data',
+                    subtitle: 'Export database as JSON',
                     iconColor: const Color(0xFF007AFF),
-                    onTap: null,
+                    onTap: () async {
+                      try {
+                        await BackupHelper.shareBackupFile();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Backup file shared successfully')),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Export failed: $e')),
+                          );
+                        }
+                      }
+                    },
                   ),
                   SettingsTile(
                     icon: Icons.download_rounded,
-                    title: 'Import Data (Coming Soon)',
-                    subtitle: 'Import from CSV or JSON',
+                    title: 'Import Data',
+                    subtitle: 'Import database from JSON text',
                     iconColor: const Color(0xFF6366F1),
-                    onTap: null,
+                    onTap: () {
+                      final controller = TextEditingController();
+                      showDialog(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          backgroundColor: context.surfaceColor,
+                          title: Text(
+                            'Import Backup Data',
+                            style: AppTypography.titleLarge.copyWith(
+                              color: context.textPrimaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Paste the JSON content of your backup below. This will overwrite all current transactions and budgets.',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: context.textSecondaryColor,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              TextField(
+                                controller: controller,
+                                maxLines: 8,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: context.textPrimaryColor,
+                                ),
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: context.surfaceVariantColor,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  hintText: 'Paste JSON here...',
+                                  hintStyle: TextStyle(
+                                    color: context.textSecondaryColor.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(dialogContext).pop(),
+                              child: Text(
+                                'Cancel',
+                                style: AppTypography.labelLarge.copyWith(
+                                  color: context.textSecondaryColor,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                final jsonText = controller.text.trim();
+                                if (jsonText.isEmpty) return;
+                                try {
+                                  await BackupHelper.deserializeData(jsonText);
+                                  
+                                  // Invalidate providers to refresh UI instantly
+                                  ref.invalidate(expenseNotifierProvider);
+                                  ref.invalidate(budgetNotifierProvider);
+                                  
+                                  if (context.mounted) {
+                                    Navigator.of(dialogContext).pop();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Data imported successfully')),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Failed to import: Invalid JSON format')),
+                                    );
+                                  }
+                                }
+                              },
+                              child: Text(
+                                'Import',
+                                style: AppTypography.labelLarge.copyWith(
+                                  color: context.primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                   SettingsTile(
                     icon: Icons.delete_outline_rounded,

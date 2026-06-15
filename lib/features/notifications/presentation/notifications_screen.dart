@@ -316,6 +316,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             child: InkWell(
               onTap: () {
                 ref.read(notificationsListProvider.notifier).markAsRead(item.id);
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => const AddExpenseBottomSheet(),
+                );
               },
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -57,9 +57,7 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
       _triggerAutoScan();
     }
 
-    final pendingTransactions = inbox;
-    final approvedTransactions = <SmsTransaction>[];
-    final rejectedTransactions = <SmsTransaction>[];
+
 
 
 

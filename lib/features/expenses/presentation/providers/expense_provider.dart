@@ -1,10 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/expense_entity.dart';
 import '../../domain/repositories/expense_repository.dart';
 import '../../data/repositories/expense_repository_impl.dart';
 import '../../../../core/database/app_database.dart';
-import '../../../settings/presentation/providers/settings_provider.dart';
 
 /// Presentation state for the Expenses feature.
 class ExpenseState {
@@ -24,11 +22,8 @@ class ExpenseState {
 /// Notifier that manages expense tracking logic, handles database reactivity, and initial data seeding.
 class ExpenseNotifier extends StateNotifier<ExpenseState> {
   final ExpenseRepository _repository;
-  final SharedPreferences _prefs;
 
-  static const String _seedKey = 'db_seeded';
-
-  ExpenseNotifier(this._repository, this._prefs)
+  ExpenseNotifier(this._repository)
     : super(ExpenseState(expenses: [])) {
     _init();
   }
@@ -110,6 +105,5 @@ final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) {
 final expenseNotifierProvider =
     StateNotifierProvider<ExpenseNotifier, ExpenseState>((ref) {
       final repository = ref.watch(expenseRepositoryProvider);
-      final prefs = ref.watch(sharedPreferencesProvider);
-      return ExpenseNotifier(repository, prefs);
+      return ExpenseNotifier(repository);
     });
