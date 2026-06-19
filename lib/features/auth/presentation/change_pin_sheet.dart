@@ -63,7 +63,9 @@ class _ChangePinSheetState extends ConsumerState<ChangePinSheet> {
             behavior: SnackBarBehavior.floating,
             backgroundColor: context.primaryColor,
             elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
         Navigator.of(context).pop();
@@ -127,7 +129,9 @@ class _ChangePinSheetState extends ConsumerState<ChangePinSheet> {
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Update your 4-digit security passcode.',
-            style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor),
+            style: AppTypography.bodySmall.copyWith(
+              color: context.textSecondaryColor,
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
 
@@ -172,9 +176,15 @@ class _ChangePinSheetState extends ConsumerState<ChangePinSheet> {
                   labelText: 'Confirm New PIN',
                   hintText: 'Re-enter new 4-digit PIN',
                   validator: (val) {
-                    if (val == null || val.isEmpty) return 'Confirm PIN cannot be empty';
-                    if (val.length != 4) return 'PIN must be exactly 4 digits';
-                    if (val != _newPinController.text) return 'Confirm PIN does not match';
+                    if (val == null || val.isEmpty) {
+                      return 'Confirm PIN cannot be empty';
+                    }
+                    if (val.length != 4) {
+                      return 'PIN must be exactly 4 digits';
+                    }
+                    if (val != _newPinController.text) {
+                      return 'Confirm PIN does not match';
+                    }
                     return null;
                   },
                 ),
@@ -199,7 +209,9 @@ class _ChangePinSheetState extends ConsumerState<ChangePinSheet> {
                             height: 24,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : Text(
@@ -240,7 +252,9 @@ class _ChangePinSheetState extends ConsumerState<ChangePinSheet> {
       ],
       decoration: InputDecoration(
         labelText: labelText,
-        labelStyle: AppTypography.bodyMedium.copyWith(color: context.textSecondaryColor),
+        labelStyle: AppTypography.bodyMedium.copyWith(
+          color: context.textSecondaryColor,
+        ),
         hintText: hintText,
         hintStyle: AppTypography.bodyMedium.copyWith(
           color: context.textSecondaryColor.withValues(alpha: 0.5),
@@ -263,7 +277,8 @@ class _ChangePinSheetState extends ConsumerState<ChangePinSheet> {
         ),
         errorStyle: const TextStyle(height: 0.8),
       ),
-      validator: validator ??
+      validator:
+          validator ??
           (val) {
             if (val == null || val.isEmpty) return '$labelText cannot be empty';
             if (val.length != 4) return 'PIN must be exactly 4 digits';

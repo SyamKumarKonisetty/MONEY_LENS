@@ -1,4 +1,4 @@
-package com.example.money_lens
+package com.syamkumar.moneylens
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -58,11 +58,13 @@ class MainActivity : FlutterActivity() {
             )
 
             cursor?.let {
+                val idIndex = it.getColumnIndex("_id")
                 val bodyIndex = it.getColumnIndex("body")
                 val addressIndex = it.getColumnIndex("address")
                 val dateIndex = it.getColumnIndex("date")
 
                 while (it.moveToNext()) {
+                    val id = if (idIndex >= 0) it.getString(idIndex) ?: "" else ""
                     val body = if (bodyIndex >= 0) it.getString(bodyIndex) ?: "" else ""
                     val address = if (addressIndex >= 0) it.getString(addressIndex) ?: "" else ""
                     val date = if (dateIndex >= 0) it.getLong(dateIndex) else 0L
@@ -70,6 +72,7 @@ class MainActivity : FlutterActivity() {
                     if (body.isNotEmpty()) {
                         smsList.add(
                             mapOf(
+                                "id" to id,
                                 "address" to address,
                                 "body" to body,
                                 "date" to date

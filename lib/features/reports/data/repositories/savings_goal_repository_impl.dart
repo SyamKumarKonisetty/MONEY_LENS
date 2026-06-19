@@ -21,14 +21,18 @@ class SavingsGoalRepositoryImpl implements SavingsGoalRepository {
   Stream<SavingsGoalEntity?> watchSavingsGoal(int month, int year) {
     final query = _db.select(_db.savingsGoals)
       ..where((t) => t.month.equals(month) & t.year.equals(year));
-    return query.watchSingleOrNull().map((row) => row != null ? SavingsGoalModel.fromDb(row) : null);
+    return query.watchSingleOrNull().map(
+      (row) => row != null ? SavingsGoalModel.fromDb(row) : null,
+    );
   }
 
   @override
   Future<void> setSavingsGoal(SavingsGoalEntity goal) async {
     final existing = await getSavingsGoal(goal.month, goal.year);
     if (existing != null) {
-      final updated = SavingsGoalModel.toCompanion(goal.copyWith(id: existing.id));
+      final updated = SavingsGoalModel.toCompanion(
+        goal.copyWith(id: existing.id),
+      );
       await _db.update(_db.savingsGoals).replace(updated);
     } else {
       final inserted = SavingsGoalModel.toCompanion(goal);

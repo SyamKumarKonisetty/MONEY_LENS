@@ -23,8 +23,7 @@ class ExpenseState {
 class ExpenseNotifier extends StateNotifier<ExpenseState> {
   final ExpenseRepository _repository;
 
-  ExpenseNotifier(this._repository)
-    : super(ExpenseState(expenses: [])) {
+  ExpenseNotifier(this._repository) : super(ExpenseState(expenses: [])) {
     _init();
   }
 
@@ -42,6 +41,7 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
     required String category,
     String? notes,
     String transactionType = 'expense',
+    DateTime? createdAt,
   }) async {
     final now = DateTime.now();
     final expense = ExpenseEntity(
@@ -49,7 +49,7 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
       amount: amount,
       category: category,
       notes: notes,
-      createdAt: now,
+      createdAt: createdAt ?? now,
       updatedAt: now,
       transactionType: transactionType,
     );

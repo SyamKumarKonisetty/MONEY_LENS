@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 
 String normalizeDate(String input) {
   final parts = input.split('-');
@@ -13,7 +12,8 @@ class NotificationItem {
   final String body;
   final DateTime timestamp;
   final bool isRead;
-  final String type; // 'summary', 'reminder', 'budget', 'weekly', 'monthly', 'achievement'
+  final String
+  type; // 'summary', 'reminder', 'budget', 'weekly', 'monthly', 'achievement'
   final Map<String, String>? metadata;
 
   NotificationItem({
@@ -47,14 +47,14 @@ class NotificationItem {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'body': body,
-        'timestamp': timestamp.toIso8601String(),
-        'isRead': isRead,
-        'type': type,
-        'metadata': metadata,
-      };
+    'id': id,
+    'title': title,
+    'body': body,
+    'timestamp': timestamp.toIso8601String(),
+    'isRead': isRead,
+    'type': type,
+    'metadata': metadata,
+  };
 
   factory NotificationItem.fromJson(Map<String, dynamic> json) {
     final dateString = json['timestamp'] as String? ?? '';
@@ -62,7 +62,6 @@ class NotificationItem {
     try {
       parsedDate = DateTime.parse(normalizeDate(dateString));
     } catch (e) {
-      debugPrint('Invalid date: $dateString');
       parsedDate = DateTime.now();
     }
 

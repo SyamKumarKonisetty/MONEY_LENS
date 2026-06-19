@@ -17,7 +17,7 @@ void main() {
 
     test('setupPinAndRecovery hashes the PIN and recovery answer securely', () {
       authNotifier.setupPinAndRecovery('1234', 50000.0, 'salaried');
-      
+
       final storedValue = prefs.getString('auth_pin');
       expect(storedValue, isNotNull);
       expect(storedValue!.length, 64);
@@ -30,7 +30,7 @@ void main() {
 
     test('authenticate verifies hashed PIN correctly', () {
       authNotifier.setupPinAndRecovery('1234', 50000.0, 'salaried');
-      
+
       // Verification with correct PIN
       final authenticatedSuccess = authNotifier.authenticate('1234');
       expect(authenticatedSuccess, isTrue);
@@ -44,15 +44,18 @@ void main() {
     test('auto-migration upgrades plain text PIN to SHA-256 hash', () {
       // 1. Store plain-text PIN manually
       prefs.setString('auth_pin', '5678');
-      prefs.setString('recovery_answer_hash', hashPin('50000.00')); // Set recovery to pass isPinSetup
-      
+      prefs.setString(
+        'recovery_answer_hash',
+        hashPin('50000.00'),
+      ); // Set recovery to pass isPinSetup
+
       // 2. Instantiate new provider representing app restart
       final newNotifier = AuthNotifier(prefs);
-      
+
       // 3. Verify it is set up and authenticates correctly
       expect(newNotifier.isPinSetup, isTrue);
       expect(newNotifier.authenticate('5678'), isTrue);
-      
+
       // 4. Verify that the SharedPreferences value was migrated to the hash
       final storedValue = prefs.getString('auth_pin');
       expect(storedValue, hashPin('5678'));
@@ -63,7 +66,10 @@ void main() {
       authNotifier.setupPinAndRecovery('1111', 50000.0, 'salaried');
 
       // 1. Mismatched confirm PIN or wrong length should be rejected by validation (handled by UI, but changePin does length checks)
-      final changeFailedWrongLength = authNotifier.changePin('1111', '123'); // too short
+      final changeFailedWrongLength = authNotifier.changePin(
+        '1111',
+        '123',
+      ); // too short
       expect(changeFailedWrongLength, isFalse);
 
       // 2. Incorrect current PIN should be rejected
@@ -74,7 +80,10 @@ void main() {
       // 3. Correct PIN change should succeed
       final changeSucceeded = authNotifier.changePin('1111', '3333');
       expect(changeSucceeded, isTrue);
-      expect(prefs.getString('auth_pin'), hashPin('3333')); // updated to new hash
+      expect(
+        prefs.getString('auth_pin'),
+        hashPin('3333'),
+      ); // updated to new hash
 
       // 4. Check new authentication works
       expect(authNotifier.authenticate('3333'), isTrue);
@@ -96,7 +105,7 @@ void main() {
 
     test('verifyRecoveryAnswer works correctly', () {
       authNotifier.setupPinAndRecovery('1234', 45000.50, 'salaried');
-      
+
       expect(authNotifier.verifyRecoveryAnswer('45000.50'), isTrue);
       expect(authNotifier.verifyRecoveryAnswer(' 45000.50 '), isTrue);
       expect(authNotifier.verifyRecoveryAnswer('45,000.50'), isTrue);

@@ -9,8 +9,10 @@ import 'package:money_lens/features/transactions/presentation/providers/transact
 
 class FakeBudgetRepository implements BudgetRepository {
   final List<BudgetEntity> _budgets = [];
-  final StreamController<BudgetEntity?> _controller = StreamController<BudgetEntity?>.broadcast();
-  final StreamController<List<BudgetEntity>> _allController = StreamController<List<BudgetEntity>>.broadcast();
+  final StreamController<BudgetEntity?> _controller =
+      StreamController<BudgetEntity?>.broadcast();
+  final StreamController<List<BudgetEntity>> _allController =
+      StreamController<List<BudgetEntity>>.broadcast();
 
   void _emit() {
     _allController.add(_budgets);
@@ -66,20 +68,24 @@ void main() {
       expect(initialFood, isNull);
 
       // Save Food budget
-      await repository.setBudget(BudgetEntity(
-        category: 'food',
-        monthlyLimit: 8000.0,
-        createdAt: now,
-        updatedAt: now,
-      ));
+      await repository.setBudget(
+        BudgetEntity(
+          category: 'food',
+          monthlyLimit: 8000.0,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
 
       // Save Fuel budget
-      await repository.setBudget(BudgetEntity(
-        category: 'fuel',
-        monthlyLimit: 3000.0,
-        createdAt: now,
-        updatedAt: now,
-      ));
+      await repository.setBudget(
+        BudgetEntity(
+          category: 'fuel',
+          monthlyLimit: 3000.0,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
 
       // Verify Food budget
       final foodBudget = await repository.getBudget('food');
@@ -152,7 +158,9 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           allTransactionsProvider.overrideWithValue(mockTxs),
-          currentMonthBudgetProvider.overrideWith((ref) => Stream.value(50000.0)),
+          currentMonthBudgetProvider.overrideWith(
+            (ref) => Stream.value(50000.0),
+          ),
         ],
       );
 
@@ -226,9 +234,7 @@ void main() {
       ];
 
       final container = ProviderContainer(
-        overrides: [
-          allTransactionsProvider.overrideWithValue(mockTxs),
-        ],
+        overrides: [allTransactionsProvider.overrideWithValue(mockTxs)],
       );
 
       final insights = container.read(spendingInsightsProvider);
@@ -251,7 +257,7 @@ void main() {
     group('Alert and Warning threshold calculations', () {
       test('Threshold alerts generation based on utilization percent', () {
         final budget = 10000.0;
-        
+
         final testCases = [
           {'spent': 5000.0, 'expectedAlert': false},
           {'spent': 8200.0, 'expectedAlert': true},

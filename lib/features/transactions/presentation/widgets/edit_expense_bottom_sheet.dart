@@ -56,7 +56,7 @@ class _EditExpenseBottomSheetState
   void _submit() {
     if (_formKey.currentState!.validate() && widget.expense.id != null) {
       setState(() => _isSaving = true);
-      
+
       final String title;
       if (_titleController.text.trim().isEmpty) {
         title = widget.expense.transactionType == 'income'
@@ -65,7 +65,7 @@ class _EditExpenseBottomSheetState
       } else {
         title = _titleController.text.trim();
       }
-      
+
       final amount = double.tryParse(_amountController.text.trim()) ?? 0.0;
       final notes = _notesController.text.trim();
 

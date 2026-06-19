@@ -21,7 +21,9 @@ class TodaySummarySection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.pagePadding,
+          ),
           child: Text(
             'Today',
             style: AppTypography.titleMedium.copyWith(
@@ -32,7 +34,9 @@ class TodaySummarySection extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.pagePadding,
+          ),
           child: Row(
             children: [
               Expanded(

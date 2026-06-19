@@ -7,14 +7,12 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../providers/auth_provider.dart';
 import 'forgot_pin_sheet.dart';
+import '../../settings/presentation/providers/user_profile_provider.dart';
 
 class PinLoginScreen extends ConsumerStatefulWidget {
   final bool isSetupMode;
 
-  const PinLoginScreen({
-    super.key,
-    required this.isSetupMode,
-  });
+  const PinLoginScreen({super.key, required this.isSetupMode});
 
   @override
   ConsumerState<PinLoginScreen> createState() => _PinLoginScreenState();
@@ -26,6 +24,10 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
   bool _isConfirming = false;
   String? _errorMessage;
 
+  bool _isEnteringName = false;
+  final _nameFormKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+
   bool _isSettingUpRecovery = false;
   String? _selectedProfile; // 'student' or 'salaried'
   final _recoveryFormKey = GlobalKey<FormState>();
@@ -33,6 +35,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _recoveryInputController.dispose();
     super.dispose();
   }
@@ -79,7 +82,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
           if (_inputPin == _firstEnteredPin) {
             HapticFeedback.mediumImpact();
             setState(() {
-              _isSettingUpRecovery = true;
+              _isEnteringName = true;
               _errorMessage = null;
             });
           } else {
@@ -146,7 +149,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
-                'Select Profile Type',
+                'Who are you?',
                 style: AppTypography.displayMedium.copyWith(
                   color: context.textPrimaryColor,
                   fontWeight: FontWeight.bold,
@@ -189,7 +192,11 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                           color: const Color(0xFF34C759).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.school_rounded, color: Color(0xFF34C759), size: 24),
+                        child: const Icon(
+                          Icons.school_rounded,
+                          color: Color(0xFF34C759),
+                          size: 24,
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.lg),
                       Expanded(
@@ -205,7 +212,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Expected monthly salary question',
+                              'Expected Monthly Income',
                               style: AppTypography.bodySmall.copyWith(
                                 color: context.textSecondaryColor,
                               ),
@@ -213,7 +220,11 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                           ],
                         ),
                       ),
-                      Icon(Icons.arrow_forward_ios_rounded, size: 16, color: context.textSecondaryColor),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: context.textSecondaryColor,
+                      ),
                     ],
                   ),
                 ),
@@ -246,7 +257,11 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                           color: const Color(0xFF007AFF).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.work_rounded, color: Color(0xFF007AFF), size: 24),
+                        child: const Icon(
+                          Icons.work_rounded,
+                          color: Color(0xFF007AFF),
+                          size: 24,
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.lg),
                       Expanded(
@@ -262,7 +277,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Monthly salary question',
+                              'Monthly Salary',
                               style: AppTypography.bodySmall.copyWith(
                                 color: context.textSecondaryColor,
                               ),
@@ -270,7 +285,11 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                           ],
                         ),
                       ),
-                      Icon(Icons.arrow_forward_ios_rounded, size: 16, color: context.textSecondaryColor),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: context.textSecondaryColor,
+                      ),
                     ],
                   ),
                 ),
@@ -285,8 +304,11 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
   Widget _buildSalaryInputView(BuildContext context) {
     final isStudent = _selectedProfile == 'student';
     final questionText = isStudent
-        ? 'What is your expected monthly salary?'
+        ? 'What is your expected monthly income?'
         : 'What is your monthly salary?';
+    final labelText = isStudent
+        ? 'Expected Monthly Income (₹)'
+        : 'Monthly Salary (₹)';
 
     return Scaffold(
       backgroundColor: context.backgroundColor,
@@ -305,11 +327,16 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                     _selectedProfile = null;
                   });
                 },
-                icon: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: context.primaryColor),
-                label: Text('Back to Profile selection', style: TextStyle(color: context.primaryColor)),
-                style: TextButton.styleFrom(
-                  alignment: Alignment.centerLeft,
+                icon: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 14,
+                  color: context.primaryColor,
                 ),
+                label: Text(
+                  'Back to Profile selection',
+                  style: TextStyle(color: context.primaryColor),
+                ),
+                style: TextButton.styleFrom(alignment: Alignment.centerLeft),
               ),
               const SizedBox(height: AppSpacing.xl),
               Center(
@@ -371,10 +398,16 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       style: TextStyle(color: context.textPrimaryColor),
                       decoration: InputDecoration(
-                        labelText: 'Salary Amount (₹)',
-                        labelStyle: TextStyle(color: context.textSecondaryColor),
+                        labelText: labelText,
+                        labelStyle: TextStyle(
+                          color: context.textSecondaryColor,
+                        ),
                         hintText: 'e.g. 50000',
-                        hintStyle: TextStyle(color: context.textSecondaryColor.withValues(alpha: 0.5)),
+                        hintStyle: TextStyle(
+                          color: context.textSecondaryColor.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
                         filled: true,
                         fillColor: context.surfaceVariantColor,
                         border: OutlineInputBorder(
@@ -383,7 +416,10 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: context.primaryColor, width: 1.5),
+                          borderSide: BorderSide(
+                            color: context.primaryColor,
+                            width: 1.5,
+                          ),
                         ),
                       ),
                       validator: (value) {
@@ -410,10 +446,17 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                           ),
                           elevation: 0,
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           if (_recoveryFormKey.currentState!.validate()) {
-                            final amt = double.parse(_recoveryInputController.text);
-                            ref.read(authNotifierProvider.notifier).setupPinAndRecovery(
+                            final amt = double.parse(
+                              _recoveryInputController.text,
+                            );
+                            await ref
+                                .read(userProfileNotifierProvider.notifier)
+                                .updateName(_nameController.text);
+                            ref
+                                .read(authNotifierProvider.notifier)
+                                .setupPinAndRecovery(
                                   _firstEnteredPin,
                                   amt,
                                   _selectedProfile!,
@@ -422,6 +465,181 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                         },
                         child: Text(
                           'Save Recovery & PIN',
+                          style: AppTypography.titleMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNameInputView(BuildContext context) {
+    return Scaffold(
+      backgroundColor: context.backgroundColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.pagePadding,
+            vertical: AppSpacing.giant,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _isEnteringName = false;
+                    _inputPin = '';
+                    _firstEnteredPin = '';
+                    _isConfirming = false;
+                  });
+                },
+                icon: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 14,
+                  color: context.primaryColor,
+                ),
+                label: Text(
+                  'Back to PIN creation',
+                  style: TextStyle(color: context.primaryColor),
+                ),
+                style: TextButton.styleFrom(alignment: Alignment.centerLeft),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: context.primaryColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.face_rounded,
+                    size: 40,
+                    color: context.primaryColor,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Text(
+                'What should we call you?',
+                style: AppTypography.displayMedium.copyWith(
+                  color: context.textPrimaryColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 26,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Choose a display name for your personalized dashboard.',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: context.textSecondaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Form(
+                key: _nameFormKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      style: TextStyle(color: context.textPrimaryColor),
+                      maxLength: 25,
+                      textCapitalization: TextCapitalization.words,
+                      inputFormatters: [LengthLimitingTextInputFormatter(25)],
+                      decoration: InputDecoration(
+                        labelText: 'Your Name',
+                        labelStyle: TextStyle(
+                          color: context.textSecondaryColor,
+                        ),
+                        hintText: 'e.g. Syam',
+                        hintStyle: TextStyle(
+                          color: context.textSecondaryColor.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: context.surfaceVariantColor,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.primaryColor,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                      onChanged: (val) {
+                        setState(() {});
+                      },
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your name';
+                        }
+                        if (value.trim().length > 25) {
+                          return 'Name must be 25 characters or less';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    // Examples chips
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: ['HERO', 'HEROINE', 'VILLAN', 'NOONE'].map((
+                        name,
+                      ) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: ChoiceChip(
+                            label: Text(name),
+                            selected: _nameController.text.trim() == name,
+                            onSelected: (selected) {
+                              setState(() {
+                                _nameController.text = name;
+                              });
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          if (_nameFormKey.currentState!.validate()) {
+                            setState(() {
+                              _isEnteringName = false;
+                              _isSettingUpRecovery = true;
+                            });
+                          }
+                        },
+                        child: Text(
+                          'Continue',
                           style: AppTypography.titleMedium.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -449,6 +667,9 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isEnteringName) {
+      return _buildNameInputView(context);
+    }
     if (_isSettingUpRecovery) {
       return _buildRecoverySetupView(context);
     }
@@ -477,7 +698,9 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
             const Spacer(),
             // Title & Subtitle
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.pagePadding,
+              ),
               child: Column(
                 children: [
                   Container(
@@ -544,7 +767,9 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
             // Error Message
             if (_errorMessage != null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pagePadding,
+                ),
                 child: Text(
                   _errorMessage ?? '',
                   style: TextStyle(

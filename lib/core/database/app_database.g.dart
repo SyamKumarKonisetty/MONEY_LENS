@@ -1258,12 +1258,426 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoal> {
   }
 }
 
+class $RawSmsTableTable extends RawSmsTable
+    with TableInfo<$RawSmsTableTable, RawSms> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RawSmsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _senderMeta = const VerificationMeta('sender');
+  @override
+  late final GeneratedColumn<String> sender = GeneratedColumn<String>(
+    'sender',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+    'body',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _receivedDateMeta = const VerificationMeta(
+    'receivedDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> receivedDate = GeneratedColumn<DateTime>(
+    'received_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _processedMeta = const VerificationMeta(
+    'processed',
+  );
+  @override
+  late final GeneratedColumn<bool> processed = GeneratedColumn<bool>(
+    'processed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("processed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _ignoredMeta = const VerificationMeta(
+    'ignored',
+  );
+  @override
+  late final GeneratedColumn<bool> ignored = GeneratedColumn<bool>(
+    'ignored',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("ignored" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    sender,
+    body,
+    receivedDate,
+    processed,
+    ignored,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'raw_sms_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RawSms> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('sender')) {
+      context.handle(
+        _senderMeta,
+        sender.isAcceptableOrUnknown(data['sender']!, _senderMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_senderMeta);
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+        _bodyMeta,
+        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bodyMeta);
+    }
+    if (data.containsKey('received_date')) {
+      context.handle(
+        _receivedDateMeta,
+        receivedDate.isAcceptableOrUnknown(
+          data['received_date']!,
+          _receivedDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_receivedDateMeta);
+    }
+    if (data.containsKey('processed')) {
+      context.handle(
+        _processedMeta,
+        processed.isAcceptableOrUnknown(data['processed']!, _processedMeta),
+      );
+    }
+    if (data.containsKey('ignored')) {
+      context.handle(
+        _ignoredMeta,
+        ignored.isAcceptableOrUnknown(data['ignored']!, _ignoredMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RawSms map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RawSms(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      sender: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sender'],
+      )!,
+      body: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body'],
+      )!,
+      receivedDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}received_date'],
+      )!,
+      processed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}processed'],
+      )!,
+      ignored: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ignored'],
+      )!,
+    );
+  }
+
+  @override
+  $RawSmsTableTable createAlias(String alias) {
+    return $RawSmsTableTable(attachedDatabase, alias);
+  }
+}
+
+class RawSms extends DataClass implements Insertable<RawSms> {
+  final String id;
+  final String sender;
+  final String body;
+  final DateTime receivedDate;
+  final bool processed;
+  final bool ignored;
+  const RawSms({
+    required this.id,
+    required this.sender,
+    required this.body,
+    required this.receivedDate,
+    required this.processed,
+    required this.ignored,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['sender'] = Variable<String>(sender);
+    map['body'] = Variable<String>(body);
+    map['received_date'] = Variable<DateTime>(receivedDate);
+    map['processed'] = Variable<bool>(processed);
+    map['ignored'] = Variable<bool>(ignored);
+    return map;
+  }
+
+  RawSmsTableCompanion toCompanion(bool nullToAbsent) {
+    return RawSmsTableCompanion(
+      id: Value(id),
+      sender: Value(sender),
+      body: Value(body),
+      receivedDate: Value(receivedDate),
+      processed: Value(processed),
+      ignored: Value(ignored),
+    );
+  }
+
+  factory RawSms.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RawSms(
+      id: serializer.fromJson<String>(json['id']),
+      sender: serializer.fromJson<String>(json['sender']),
+      body: serializer.fromJson<String>(json['body']),
+      receivedDate: serializer.fromJson<DateTime>(json['receivedDate']),
+      processed: serializer.fromJson<bool>(json['processed']),
+      ignored: serializer.fromJson<bool>(json['ignored']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sender': serializer.toJson<String>(sender),
+      'body': serializer.toJson<String>(body),
+      'receivedDate': serializer.toJson<DateTime>(receivedDate),
+      'processed': serializer.toJson<bool>(processed),
+      'ignored': serializer.toJson<bool>(ignored),
+    };
+  }
+
+  RawSms copyWith({
+    String? id,
+    String? sender,
+    String? body,
+    DateTime? receivedDate,
+    bool? processed,
+    bool? ignored,
+  }) => RawSms(
+    id: id ?? this.id,
+    sender: sender ?? this.sender,
+    body: body ?? this.body,
+    receivedDate: receivedDate ?? this.receivedDate,
+    processed: processed ?? this.processed,
+    ignored: ignored ?? this.ignored,
+  );
+  RawSms copyWithCompanion(RawSmsTableCompanion data) {
+    return RawSms(
+      id: data.id.present ? data.id.value : this.id,
+      sender: data.sender.present ? data.sender.value : this.sender,
+      body: data.body.present ? data.body.value : this.body,
+      receivedDate: data.receivedDate.present
+          ? data.receivedDate.value
+          : this.receivedDate,
+      processed: data.processed.present ? data.processed.value : this.processed,
+      ignored: data.ignored.present ? data.ignored.value : this.ignored,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RawSms(')
+          ..write('id: $id, ')
+          ..write('sender: $sender, ')
+          ..write('body: $body, ')
+          ..write('receivedDate: $receivedDate, ')
+          ..write('processed: $processed, ')
+          ..write('ignored: $ignored')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, sender, body, receivedDate, processed, ignored);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RawSms &&
+          other.id == this.id &&
+          other.sender == this.sender &&
+          other.body == this.body &&
+          other.receivedDate == this.receivedDate &&
+          other.processed == this.processed &&
+          other.ignored == this.ignored);
+}
+
+class RawSmsTableCompanion extends UpdateCompanion<RawSms> {
+  final Value<String> id;
+  final Value<String> sender;
+  final Value<String> body;
+  final Value<DateTime> receivedDate;
+  final Value<bool> processed;
+  final Value<bool> ignored;
+  final Value<int> rowid;
+  const RawSmsTableCompanion({
+    this.id = const Value.absent(),
+    this.sender = const Value.absent(),
+    this.body = const Value.absent(),
+    this.receivedDate = const Value.absent(),
+    this.processed = const Value.absent(),
+    this.ignored = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RawSmsTableCompanion.insert({
+    required String id,
+    required String sender,
+    required String body,
+    required DateTime receivedDate,
+    this.processed = const Value.absent(),
+    this.ignored = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       sender = Value(sender),
+       body = Value(body),
+       receivedDate = Value(receivedDate);
+  static Insertable<RawSms> custom({
+    Expression<String>? id,
+    Expression<String>? sender,
+    Expression<String>? body,
+    Expression<DateTime>? receivedDate,
+    Expression<bool>? processed,
+    Expression<bool>? ignored,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sender != null) 'sender': sender,
+      if (body != null) 'body': body,
+      if (receivedDate != null) 'received_date': receivedDate,
+      if (processed != null) 'processed': processed,
+      if (ignored != null) 'ignored': ignored,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RawSmsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? sender,
+    Value<String>? body,
+    Value<DateTime>? receivedDate,
+    Value<bool>? processed,
+    Value<bool>? ignored,
+    Value<int>? rowid,
+  }) {
+    return RawSmsTableCompanion(
+      id: id ?? this.id,
+      sender: sender ?? this.sender,
+      body: body ?? this.body,
+      receivedDate: receivedDate ?? this.receivedDate,
+      processed: processed ?? this.processed,
+      ignored: ignored ?? this.ignored,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sender.present) {
+      map['sender'] = Variable<String>(sender.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (receivedDate.present) {
+      map['received_date'] = Variable<DateTime>(receivedDate.value);
+    }
+    if (processed.present) {
+      map['processed'] = Variable<bool>(processed.value);
+    }
+    if (ignored.present) {
+      map['ignored'] = Variable<bool>(ignored.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RawSmsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('sender: $sender, ')
+          ..write('body: $body, ')
+          ..write('receivedDate: $receivedDate, ')
+          ..write('processed: $processed, ')
+          ..write('ignored: $ignored, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ExpensesTable expenses = $ExpensesTable(this);
   late final $BudgetsTable budgets = $BudgetsTable(this);
   late final $SavingsGoalsTable savingsGoals = $SavingsGoalsTable(this);
+  late final $RawSmsTableTable rawSmsTable = $RawSmsTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1272,6 +1686,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     expenses,
     budgets,
     savingsGoals,
+    rawSmsTable,
   ];
 }
 
@@ -1929,6 +2344,221 @@ typedef $$SavingsGoalsTableProcessedTableManager =
       SavingsGoal,
       PrefetchHooks Function()
     >;
+typedef $$RawSmsTableTableCreateCompanionBuilder =
+    RawSmsTableCompanion Function({
+      required String id,
+      required String sender,
+      required String body,
+      required DateTime receivedDate,
+      Value<bool> processed,
+      Value<bool> ignored,
+      Value<int> rowid,
+    });
+typedef $$RawSmsTableTableUpdateCompanionBuilder =
+    RawSmsTableCompanion Function({
+      Value<String> id,
+      Value<String> sender,
+      Value<String> body,
+      Value<DateTime> receivedDate,
+      Value<bool> processed,
+      Value<bool> ignored,
+      Value<int> rowid,
+    });
+
+class $$RawSmsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $RawSmsTableTable> {
+  $$RawSmsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sender => $composableBuilder(
+    column: $table.sender,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get receivedDate => $composableBuilder(
+    column: $table.receivedDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get processed => $composableBuilder(
+    column: $table.processed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get ignored => $composableBuilder(
+    column: $table.ignored,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RawSmsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $RawSmsTableTable> {
+  $$RawSmsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sender => $composableBuilder(
+    column: $table.sender,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get receivedDate => $composableBuilder(
+    column: $table.receivedDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get processed => $composableBuilder(
+    column: $table.processed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get ignored => $composableBuilder(
+    column: $table.ignored,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RawSmsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RawSmsTableTable> {
+  $$RawSmsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get sender =>
+      $composableBuilder(column: $table.sender, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get receivedDate => $composableBuilder(
+    column: $table.receivedDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get processed =>
+      $composableBuilder(column: $table.processed, builder: (column) => column);
+
+  GeneratedColumn<bool> get ignored =>
+      $composableBuilder(column: $table.ignored, builder: (column) => column);
+}
+
+class $$RawSmsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RawSmsTableTable,
+          RawSms,
+          $$RawSmsTableTableFilterComposer,
+          $$RawSmsTableTableOrderingComposer,
+          $$RawSmsTableTableAnnotationComposer,
+          $$RawSmsTableTableCreateCompanionBuilder,
+          $$RawSmsTableTableUpdateCompanionBuilder,
+          (RawSms, BaseReferences<_$AppDatabase, $RawSmsTableTable, RawSms>),
+          RawSms,
+          PrefetchHooks Function()
+        > {
+  $$RawSmsTableTableTableManager(_$AppDatabase db, $RawSmsTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RawSmsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RawSmsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RawSmsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> sender = const Value.absent(),
+                Value<String> body = const Value.absent(),
+                Value<DateTime> receivedDate = const Value.absent(),
+                Value<bool> processed = const Value.absent(),
+                Value<bool> ignored = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RawSmsTableCompanion(
+                id: id,
+                sender: sender,
+                body: body,
+                receivedDate: receivedDate,
+                processed: processed,
+                ignored: ignored,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String sender,
+                required String body,
+                required DateTime receivedDate,
+                Value<bool> processed = const Value.absent(),
+                Value<bool> ignored = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RawSmsTableCompanion.insert(
+                id: id,
+                sender: sender,
+                body: body,
+                receivedDate: receivedDate,
+                processed: processed,
+                ignored: ignored,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RawSmsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RawSmsTableTable,
+      RawSms,
+      $$RawSmsTableTableFilterComposer,
+      $$RawSmsTableTableOrderingComposer,
+      $$RawSmsTableTableAnnotationComposer,
+      $$RawSmsTableTableCreateCompanionBuilder,
+      $$RawSmsTableTableUpdateCompanionBuilder,
+      (RawSms, BaseReferences<_$AppDatabase, $RawSmsTableTable, RawSms>),
+      RawSms,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1939,4 +2569,6 @@ class $AppDatabaseManager {
       $$BudgetsTableTableManager(_db, _db.budgets);
   $$SavingsGoalsTableTableManager get savingsGoals =>
       $$SavingsGoalsTableTableManager(_db, _db.savingsGoals);
+  $$RawSmsTableTableTableManager get rawSmsTable =>
+      $$RawSmsTableTableTableManager(_db, _db.rawSmsTable);
 }

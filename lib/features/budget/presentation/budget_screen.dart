@@ -13,7 +13,10 @@ import 'providers/budget_provider.dart';
 class BudgetScreen extends ConsumerWidget {
   const BudgetScreen({super.key});
 
-  void _showCategorySelectSheet(BuildContext context, List<BudgetEntity> activeBudgets) {
+  void _showCategorySelectSheet(
+    BuildContext context,
+    List<BudgetEntity> activeBudgets,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -22,7 +25,12 @@ class BudgetScreen extends ConsumerWidget {
     );
   }
 
-  void _showSetBudgetSheet(BuildContext context, Category category, {double? currentLimit, int? budgetId}) {
+  void _showSetBudgetSheet(
+    BuildContext context,
+    Category category, {
+    double? currentLimit,
+    int? budgetId,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -76,8 +84,13 @@ class BudgetScreen extends ConsumerWidget {
                 centerTitle: true,
                 actions: [
                   IconButton(
-                    icon: Icon(Icons.add_rounded, color: context.primaryColor, size: 28),
-                    onPressed: () => _showCategorySelectSheet(context, liveBudgets),
+                    icon: Icon(
+                      Icons.add_rounded,
+                      color: context.primaryColor,
+                      size: 28,
+                    ),
+                    onPressed: () =>
+                        _showCategorySelectSheet(context, liveBudgets),
                   ),
                 ],
               ),
@@ -160,14 +173,11 @@ class BudgetScreen extends ConsumerWidget {
                   vertical: AppSpacing.md,
                 ),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final budget = liveBudgets[index];
-                      final cat = AppCategories.findById(budget.category);
-                      return _buildCategoryBudgetCard(context, budget, cat);
-                    },
-                    childCount: liveBudgets.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final budget = liveBudgets[index];
+                    final cat = AppCategories.findById(budget.category);
+                    return _buildCategoryBudgetCard(context, budget, cat);
+                  }, childCount: liveBudgets.length),
                 ),
               ),
 
@@ -210,7 +220,9 @@ class BudgetScreen extends ConsumerWidget {
         SliverFillRemaining(
           hasScrollBody: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding * 2),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.pagePadding * 2,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -221,11 +233,15 @@ class BudgetScreen extends ConsumerWidget {
                     color: context.surfaceColor,
                     borderRadius: AppRadius.card,
                     border: Border.all(
-                      color: context.separatorColor.withValues(alpha: isDark ? 0.3 : 0.6),
+                      color: context.separatorColor.withValues(
+                        alpha: isDark ? 0.3 : 0.6,
+                      ),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.15 : 0.03,
+                        ),
                         blurRadius: 24,
                         offset: const Offset(0, 8),
                       ),
@@ -268,9 +284,19 @@ class BudgetScreen extends ConsumerWidget {
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton.icon(
-                          onPressed: () => _showCategorySelectSheet(context, []),
-                          icon: const Icon(Icons.add_rounded, color: Colors.white),
-                          label: const Text('Create Budget', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          onPressed: () =>
+                              _showCategorySelectSheet(context, []),
+                          icon: const Icon(
+                            Icons.add_rounded,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            'Create Budget',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: context.primaryColor,
                             foregroundColor: Colors.white,
@@ -347,7 +373,10 @@ class BudgetScreen extends ConsumerWidget {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: stateColor.withValues(alpha: 0.12),
                   borderRadius: AppRadius.circularFull,
@@ -385,13 +414,17 @@ class BudgetScreen extends ConsumerWidget {
                 context,
                 title: 'Total Spent',
                 value: CurrencyFormatter.compact(summary.totalSpent),
-                color: usagePercent >= 100 ? context.errorColor : context.textPrimaryColor,
+                color: usagePercent >= 100
+                    ? context.errorColor
+                    : context.textPrimaryColor,
               ),
               _buildSummaryIndicator(
                 context,
                 title: 'Remaining',
                 value: CurrencyFormatter.compact(summary.totalRemaining),
-                color: summary.totalRemaining < 0 ? context.errorColor : context.successColor,
+                color: summary.totalRemaining < 0
+                    ? context.errorColor
+                    : context.successColor,
               ),
             ],
           ),
@@ -400,7 +433,12 @@ class BudgetScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryIndicator(BuildContext context, {required String title, required String value, required Color color}) {
+  Widget _buildSummaryIndicator(
+    BuildContext context, {
+    required String title,
+    required String value,
+    required Color color,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -438,7 +476,9 @@ class BudgetScreen extends ConsumerWidget {
           title: 'Highest Budget',
           category: analytics.highestBudgetCategory?.category,
           value: analytics.highestBudgetCategory != null
-              ? CurrencyFormatter.compact(analytics.highestBudgetCategory!.monthlyLimit)
+              ? CurrencyFormatter.compact(
+                  analytics.highestBudgetCategory!.monthlyLimit,
+                )
               : '₹0',
           icon: Icons.star_rounded,
           iconColor: Colors.amber,
@@ -538,7 +578,11 @@ class BudgetScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCategoryBudgetCard(BuildContext context, BudgetEntity budget, Category cat) {
+  Widget _buildCategoryBudgetCard(
+    BuildContext context,
+    BudgetEntity budget,
+    Category cat,
+  ) {
     final isDark = context.isDark;
     final limit = budget.monthlyLimit;
     final spent = budget.spentAmount;
@@ -618,7 +662,9 @@ class BudgetScreen extends ConsumerWidget {
                       Text(
                         'Spent: ${CurrencyFormatter.compact(spent)}',
                         style: AppTypography.labelLarge.copyWith(
-                          color: isOverBudget ? context.errorColor : context.textPrimaryColor,
+                          color: isOverBudget
+                              ? context.errorColor
+                              : context.textPrimaryColor,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -628,7 +674,9 @@ class BudgetScreen extends ConsumerWidget {
                             ? 'Over: ${CurrencyFormatter.compact(remaining.abs())}'
                             : 'Left: ${CurrencyFormatter.compact(remaining)}',
                         style: AppTypography.bodySmall.copyWith(
-                          color: remaining < 0 ? context.errorColor : context.successColor,
+                          color: remaining < 0
+                              ? context.errorColor
+                              : context.successColor,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
@@ -638,7 +686,7 @@ class BudgetScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              
+
               // Animated-feeling Linear indicator
               ClipRRect(
                 borderRadius: AppRadius.circularFull,
@@ -649,20 +697,29 @@ class BudgetScreen extends ConsumerWidget {
                   color: progressBarColor,
                 ),
               ),
-              
+
               // Warning banner for high thresholds
               if (isOverBudget) ...[
                 const SizedBox(height: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: context.errorColor.withValues(alpha: 0.1),
                     borderRadius: AppRadius.circularMd,
-                    border: Border.all(color: context.errorColor.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: context.errorColor.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline_rounded, color: context.errorColor, size: 14),
+                      Icon(
+                        Icons.error_outline_rounded,
+                        color: context.errorColor,
+                        size: 14,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -680,15 +737,24 @@ class BudgetScreen extends ConsumerWidget {
               ] else if (isBreached80) ...[
                 const SizedBox(height: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: context.warningColor.withValues(alpha: 0.1),
                     borderRadius: AppRadius.circularMd,
-                    border: Border.all(color: context.warningColor.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: context.warningColor.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.warning_amber_rounded, color: context.warningColor, size: 14),
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: context.warningColor,
+                        size: 14,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -780,7 +846,9 @@ class CategorySelectSheet extends StatelessWidget {
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final cat = categories[index];
-              final hasActive = activeBudgets.any((b) => b.category.toLowerCase() == cat.id.toLowerCase());
+              final hasActive = activeBudgets.any(
+                (b) => b.category.toLowerCase() == cat.id.toLowerCase(),
+              );
 
               return Opacity(
                 opacity: hasActive ? 0.4 : 1.0,
@@ -789,7 +857,9 @@ class CategorySelectSheet extends StatelessWidget {
                     color: context.surfaceColor,
                     borderRadius: AppRadius.card,
                     border: Border.all(
-                      color: context.separatorColor.withValues(alpha: isDark ? 0.3 : 0.6),
+                      color: context.separatorColor.withValues(
+                        alpha: isDark ? 0.3 : 0.6,
+                      ),
                     ),
                   ),
                   child: InkWell(
@@ -798,7 +868,9 @@ class CategorySelectSheet extends StatelessWidget {
                             HapticFeedback.mediumImpact();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('${cat.name} budget already exists.'),
+                                content: Text(
+                                  '${cat.name} budget already exists.',
+                                ),
                                 behavior: SnackBarBehavior.floating,
                               ),
                             );
@@ -809,7 +881,8 @@ class CategorySelectSheet extends StatelessWidget {
                               context: context,
                               isScrollControlled: true,
                               backgroundColor: Colors.transparent,
-                              builder: (_) => SetBudgetBottomSheet(category: cat),
+                              builder: (_) =>
+                                  SetBudgetBottomSheet(category: cat),
                             );
                           },
                     borderRadius: AppRadius.card,
@@ -863,7 +936,8 @@ class SetBudgetBottomSheet extends ConsumerStatefulWidget {
   final int? budgetId;
 
   @override
-  ConsumerState<SetBudgetBottomSheet> createState() => _SetBudgetBottomSheetState();
+  ConsumerState<SetBudgetBottomSheet> createState() =>
+      _SetBudgetBottomSheetState();
 }
 
 class _SetBudgetBottomSheetState extends ConsumerState<SetBudgetBottomSheet> {
@@ -934,7 +1008,9 @@ class _SetBudgetBottomSheetState extends ConsumerState<SetBudgetBottomSheet> {
     if (limit <= 0) return;
     HapticFeedback.mediumImpact();
 
-    await ref.read(budgetNotifierProvider.notifier).setBudget(widget.category.id, limit);
+    await ref
+        .read(budgetNotifierProvider.notifier)
+        .setBudget(widget.category.id, limit);
 
     if (mounted) {
       Navigator.of(context).pop();
@@ -954,7 +1030,9 @@ class _SetBudgetBottomSheetState extends ConsumerState<SetBudgetBottomSheet> {
     if (widget.budgetId == null) return;
     HapticFeedback.mediumImpact();
 
-    await ref.read(budgetNotifierProvider.notifier).deleteBudget(widget.budgetId!);
+    await ref
+        .read(budgetNotifierProvider.notifier)
+        .deleteBudget(widget.budgetId!);
 
     if (mounted) {
       Navigator.of(context).pop();
@@ -1036,7 +1114,9 @@ class _SetBudgetBottomSheetState extends ConsumerState<SetBudgetBottomSheet> {
           ),
           const SizedBox(height: AppSpacing.xl),
           Text(
-            hasExisting ? 'Adjust ${widget.category.name} Budget' : 'Set ${widget.category.name} Budget',
+            hasExisting
+                ? 'Adjust ${widget.category.name} Budget'
+                : 'Set ${widget.category.name} Budget',
             style: AppTypography.titleLarge.copyWith(
               color: context.textPrimaryColor,
               fontWeight: FontWeight.bold,
@@ -1045,7 +1125,9 @@ class _SetBudgetBottomSheetState extends ConsumerState<SetBudgetBottomSheet> {
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Enter the monthly spending limit for ${widget.category.name}.',
-            style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor),
+            style: AppTypography.bodySmall.copyWith(
+              color: context.textSecondaryColor,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -1056,12 +1138,18 @@ class _SetBudgetBottomSheetState extends ConsumerState<SetBudgetBottomSheet> {
             decoration: BoxDecoration(
               color: widget.category.color.withValues(alpha: 0.12),
               borderRadius: AppRadius.circularFull,
-              border: Border.all(color: widget.category.color.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: widget.category.color.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(widget.category.icon, color: widget.category.color, size: 16),
+                Icon(
+                  widget.category.icon,
+                  color: widget.category.color,
+                  size: 16,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   widget.category.name,
@@ -1121,14 +1209,17 @@ class _SetBudgetBottomSheetState extends ConsumerState<SetBudgetBottomSheet> {
                   Expanded(
                     child: IconButton(
                       onPressed: _onBackspace,
-                      icon: Icon(Icons.backspace_outlined, color: context.textPrimaryColor),
+                      icon: Icon(
+                        Icons.backspace_outlined,
+                        color: context.textPrimaryColor,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.xl),
-              
+
               Row(
                 children: [
                   if (hasExisting) ...[
@@ -1140,9 +1231,14 @@ class _SetBudgetBottomSheetState extends ConsumerState<SetBudgetBottomSheet> {
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: context.errorColor),
                             foregroundColor: context.errorColor,
-                            shape: RoundedRectangleBorder(borderRadius: AppRadius.circularMd),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: AppRadius.circularMd,
+                            ),
                           ),
-                          child: const Text('Delete Limit', style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'Delete Limit',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ),
@@ -1153,14 +1249,18 @@ class _SetBudgetBottomSheetState extends ConsumerState<SetBudgetBottomSheet> {
                     child: SizedBox(
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: double.tryParse(_inputAmount) != null && (double.tryParse(_inputAmount) ?? 0.0) > 0
+                        onPressed:
+                            double.tryParse(_inputAmount) != null &&
+                                (double.tryParse(_inputAmount) ?? 0.0) > 0
                             ? _saveBudget
                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: widget.category.color,
                           foregroundColor: Colors.white,
                           disabledBackgroundColor: context.surfaceVariantColor,
-                          shape: RoundedRectangleBorder(borderRadius: AppRadius.circularMd),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppRadius.circularMd,
+                          ),
                           elevation: 2,
                         ),
                         child: Text(
@@ -1168,7 +1268,9 @@ class _SetBudgetBottomSheetState extends ConsumerState<SetBudgetBottomSheet> {
                           style: AppTypography.labelLarge.copyWith(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: double.tryParse(_inputAmount) != null && (double.tryParse(_inputAmount) ?? 0.0) > 0
+                            color:
+                                double.tryParse(_inputAmount) != null &&
+                                    (double.tryParse(_inputAmount) ?? 0.0) > 0
                                 ? Colors.white
                                 : context.textSecondaryColor,
                           ),
@@ -1187,7 +1289,9 @@ class _SetBudgetBottomSheetState extends ConsumerState<SetBudgetBottomSheet> {
 
   Widget _buildRow(List<String> digits) {
     return Row(
-      children: digits.map((d) => Expanded(child: _buildDigitButton(d))).toList(),
+      children: digits
+          .map((d) => Expanded(child: _buildDigitButton(d)))
+          .toList(),
     );
   }
 

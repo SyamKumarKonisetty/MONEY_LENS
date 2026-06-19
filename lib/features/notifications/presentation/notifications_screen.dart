@@ -15,7 +15,8 @@ class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
@@ -50,7 +51,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             elevation: 0,
             pinned: true,
             leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios_new_rounded, color: context.textPrimaryColor, size: 20),
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: context.textPrimaryColor,
+                size: 20,
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: Text(
@@ -63,15 +68,25 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             actions: [
               if (notifications.isNotEmpty)
                 IconButton(
-                  icon: Icon(Icons.done_all_rounded, color: context.primaryColor, size: 22),
+                  icon: Icon(
+                    Icons.done_all_rounded,
+                    color: context.primaryColor,
+                    size: 22,
+                  ),
                   tooltip: 'Mark all as read',
                   onPressed: () {
                     HapticFeedback.lightImpact();
-                    ref.read(notificationsListProvider.notifier).markAllAsRead();
+                    ref
+                        .read(notificationsListProvider.notifier)
+                        .markAllAsRead();
                   },
                 ),
               IconButton(
-                icon: Icon(Icons.delete_sweep_rounded, color: context.errorColor, size: 22),
+                icon: Icon(
+                  Icons.delete_sweep_rounded,
+                  color: context.errorColor,
+                  size: 22,
+                ),
                 tooltip: 'Clear all history',
                 onPressed: () {
                   HapticFeedback.mediumImpact();
@@ -79,7 +94,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 },
               ),
               IconButton(
-                icon: Icon(Icons.settings_rounded, color: context.textPrimaryColor, size: 20),
+                icon: Icon(
+                  Icons.settings_rounded,
+                  color: context.textPrimaryColor,
+                  size: 20,
+                ),
                 onPressed: () => _showSettingsSheet(context),
               ),
             ],
@@ -88,7 +107,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           // Streak Summary Card
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding, vertical: AppSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.pagePadding,
+                vertical: AppSpacing.sm,
+              ),
               child: _buildStreakCard(context, streak),
             ),
           ),
@@ -96,13 +118,18 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           // Tabs
           SliverToBoxAdapter(
             child: Container(
-              margin: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.sm),
+              margin: const EdgeInsets.only(
+                top: AppSpacing.md,
+                bottom: AppSpacing.sm,
+              ),
               child: TabBar(
                 controller: _tabController,
                 indicatorColor: context.primaryColor,
                 labelColor: context.primaryColor,
                 unselectedLabelColor: context.textSecondaryColor,
-                labelStyle: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                labelStyle: AppTypography.labelLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
                 tabs: const [
                   Tab(text: 'Notifications'),
                   Tab(text: 'Badges'),
@@ -136,14 +163,25 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         backgroundColor: context.surfaceColor,
         surfaceTintColor: Colors.transparent,
         title: const Text('Clear All Notifications?'),
-        content: const Text('Are you sure you want to clear your local notification history? This action cannot be undone.'),
+        content: const Text(
+          'Are you sure you want to clear your local notification history? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
-            child: Text('Cancel', style: TextStyle(color: context.textSecondaryColor)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.textSecondaryColor),
+            ),
             onPressed: () => Navigator.of(ctx).pop(),
           ),
           TextButton(
-            child: Text('Clear All', style: TextStyle(color: context.errorColor, fontWeight: FontWeight.bold)),
+            child: Text(
+              'Clear All',
+              style: TextStyle(
+                color: context.errorColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             onPressed: () {
               ref.read(notificationsListProvider.notifier).clearAll();
               Navigator.of(ctx).pop();
@@ -211,7 +249,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           ),
           const SizedBox(width: AppSpacing.md),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
+            ),
             decoration: BoxDecoration(
               color: context.primaryColor.withValues(alpha: 0.12),
               borderRadius: AppRadius.card,
@@ -239,7 +280,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     );
   }
 
-  Widget _buildNotificationsList(BuildContext context, List<NotificationItem> list) {
+  Widget _buildNotificationsList(
+    BuildContext context,
+    List<NotificationItem> list,
+  ) {
     if (list.isEmpty) {
       return Center(
         child: Column(
@@ -251,7 +295,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 color: context.surfaceColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.notifications_none_rounded, size: 48, color: context.textSecondaryColor),
+              child: Icon(
+                Icons.notifications_none_rounded,
+                size: 48,
+                color: context.textSecondaryColor,
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
@@ -290,10 +338,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               color: context.errorColor,
               borderRadius: AppRadius.card,
             ),
-            child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+            child: const Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.white,
+            ),
           ),
           onDismissed: (_) {
-            ref.read(notificationsListProvider.notifier).deleteNotification(item.id);
+            ref
+                .read(notificationsListProvider.notifier)
+                .deleteNotification(item.id);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Notification deleted'),
@@ -309,13 +362,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               borderRadius: AppRadius.card,
               border: Border.all(
                 color: item.isRead
-                    ? context.separatorColor.withValues(alpha: context.isDark ? 0.3 : 0.6)
+                    ? context.separatorColor.withValues(
+                        alpha: context.isDark ? 0.3 : 0.6,
+                      )
                     : context.primaryColor.withValues(alpha: 0.5),
               ),
             ),
             child: InkWell(
               onTap: () {
-                ref.read(notificationsListProvider.notifier).markAsRead(item.id);
+                ref
+                    .read(notificationsListProvider.notifier)
+                    .markAsRead(item.id);
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
@@ -331,7 +388,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: item.isRead ? Colors.transparent : context.primaryColor,
+                      color: item.isRead
+                          ? Colors.transparent
+                          : context.primaryColor,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -373,22 +432,35 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                             children: [
                               TextButton(
                                 onPressed: () {
-                                  ref.read(notificationsListProvider.notifier).deleteNotification(item.id);
+                                  ref
+                                      .read(notificationsListProvider.notifier)
+                                      .deleteNotification(item.id);
                                 },
-                                child: const Text('Skip', style: TextStyle(fontWeight: FontWeight.bold)),
+                                child: const Text(
+                                  'Skip',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                               ),
                               const SizedBox(width: AppSpacing.sm),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: context.primaryColor,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.md,
+                                    vertical: 8,
+                                  ),
                                 ),
                                 onPressed: () {
-                                  ref.read(notificationsListProvider.notifier).markAsRead(item.id);
+                                  ref
+                                      .read(notificationsListProvider.notifier)
+                                      .markAsRead(item.id);
                                   showAddTransactionSheet(context);
                                 },
-                                child: const Text('Add Expense', style: TextStyle(fontWeight: FontWeight.bold)),
+                                child: const Text(
+                                  'Add Expense',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                               ),
                             ],
                           ),
@@ -397,7 +469,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                         Text(
                           DateFormat('yyyy-MM-dd').format(item.timestamp),
                           style: AppTypography.labelSmall.copyWith(
-                            color: context.textSecondaryColor.withValues(alpha: 0.6),
+                            color: context.textSecondaryColor.withValues(
+                              alpha: 0.6,
+                            ),
                             fontSize: 10,
                           ),
                         ),
@@ -433,7 +507,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             border: Border.all(
               color: b.isUnlocked
                   ? context.primaryColor.withValues(alpha: 0.3)
-                  : context.separatorColor.withValues(alpha: context.isDark ? 0.3 : 0.6),
+                  : context.separatorColor.withValues(
+                      alpha: context.isDark ? 0.3 : 0.6,
+                    ),
             ),
           ),
           child: Column(
@@ -443,14 +519,18 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 b.icon,
                 style: TextStyle(
                   fontSize: 48,
-                  color: b.isUnlocked ? null : Colors.grey.withValues(alpha: 0.4),
+                  color: b.isUnlocked
+                      ? null
+                      : Colors.grey.withValues(alpha: 0.4),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
                 b.title,
                 style: AppTypography.titleMedium.copyWith(
-                  color: b.isUnlocked ? context.textPrimaryColor : context.textSecondaryColor,
+                  color: b.isUnlocked
+                      ? context.textPrimaryColor
+                      : context.textSecondaryColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -467,7 +547,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               ),
               const SizedBox(height: AppSpacing.sm),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: 2,
+                ),
                 decoration: BoxDecoration(
                   color: b.isUnlocked
                       ? context.primaryColor.withValues(alpha: 0.12)
@@ -479,7 +562,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
-                    color: b.isUnlocked ? context.primaryColor : context.textSecondaryColor,
+                    color: b.isUnlocked
+                        ? context.primaryColor
+                        : context.textSecondaryColor,
                   ),
                 ),
               ),
@@ -508,18 +593,24 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           const SizedBox(height: 4),
           Text(
             'Use these buttons to instantly trigger scheduled notifications and check alert logic in the local sandbox.',
-            style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor),
+            style: AppTypography.bodySmall.copyWith(
+              color: context.textSecondaryColor,
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           _buildSimButton(
             context,
             icon: Icons.wb_twilight_rounded,
             title: 'Daily Spending Summary',
-            desc: 'Triggers evening notification summarizing today\'s spending totals.',
+            desc:
+                'Triggers evening notification summarizing today\'s spending totals.',
             onTap: () {
               simulator.triggerDailySummary();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Triggered Daily Summary'), duration: Duration(seconds: 1)),
+                const SnackBar(
+                  content: Text('Triggered Daily Summary'),
+                  duration: Duration(seconds: 1),
+                ),
               );
             },
           ),
@@ -528,11 +619,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             context,
             icon: Icons.chat_bubble_outline_rounded,
             title: 'No-Entry Reminder',
-            desc: 'Triggers notification prompt if no transactions have been logged today.',
+            desc:
+                'Triggers notification prompt if no transactions have been logged today.',
             onTap: () {
               simulator.triggerNoEntryReminder();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Triggered No-Entry Check'), duration: Duration(seconds: 1)),
+                const SnackBar(
+                  content: Text('Triggered No-Entry Check'),
+                  duration: Duration(seconds: 1),
+                ),
               );
             },
           ),
@@ -541,11 +636,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             context,
             icon: Icons.warning_amber_rounded,
             title: 'Budget Alert Check',
-            desc: 'Evaluates active budgets and triggers 80%/90%/100% alerts accordingly.',
+            desc:
+                'Evaluates active budgets and triggers 80%/90%/100% alerts accordingly.',
             onTap: () {
               simulator.checkBudgetWarnings();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Triggered Budget Warning Check'), duration: Duration(seconds: 1)),
+                const SnackBar(
+                  content: Text('Triggered Budget Warning Check'),
+                  duration: Duration(seconds: 1),
+                ),
               );
             },
           ),
@@ -554,11 +653,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             context,
             icon: Icons.bar_chart_rounded,
             title: 'Weekly Financial Report',
-            desc: 'Triggers weekly summary of income, expenses, top category and savings rate.',
+            desc:
+                'Triggers weekly summary of income, expenses, top category and savings rate.',
             onTap: () {
               simulator.triggerWeeklyFinancialReport();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Triggered Weekly Financial Report'), duration: Duration(seconds: 1)),
+                const SnackBar(
+                  content: Text('Triggered Weekly Financial Report'),
+                  duration: Duration(seconds: 1),
+                ),
               );
             },
           ),
@@ -567,11 +670,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             context,
             icon: Icons.calendar_month_rounded,
             title: 'Month-End Summary',
-            desc: 'Generates financial health score, largest expense, and category analysis.',
+            desc:
+                'Generates financial health score, largest expense, and category analysis.',
             onTap: () {
               simulator.triggerMonthEndSummary();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Triggered Month-End Financial Summary'), duration: Duration(seconds: 1)),
+                const SnackBar(
+                  content: Text('Triggered Month-End Financial Summary'),
+                  duration: Duration(seconds: 1),
+                ),
               );
             },
           ),
@@ -591,7 +698,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       color: context.surfaceColor,
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.card,
-        side: BorderSide(color: context.separatorColor.withValues(alpha: context.isDark ? 0.3 : 0.6)),
+        side: BorderSide(
+          color: context.separatorColor.withValues(
+            alpha: context.isDark ? 0.3 : 0.6,
+          ),
+        ),
       ),
       elevation: 0,
       child: ListTile(
@@ -603,8 +714,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           ),
           child: Icon(icon, color: context.primaryColor, size: 20),
         ),
-        title: Text(title, style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold, fontSize: 14)),
-        subtitle: Text(desc, style: AppTypography.bodySmall.copyWith(fontSize: 11)),
+        title: Text(
+          title,
+          style: AppTypography.titleMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+        subtitle: Text(
+          desc,
+          style: AppTypography.bodySmall.copyWith(fontSize: 11),
+        ),
         trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
         onTap: () {
           HapticFeedback.lightImpact();

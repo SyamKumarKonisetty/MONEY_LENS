@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/expense_entity.dart';
 import '../../domain/repositories/expense_repository.dart';
@@ -38,8 +37,6 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
 
   @override
   Future<void> deleteExpense(int id) async {
-    debugPrint('Executing DB delete query for id: $id');
-    final rowsAffected = await (_db.delete(_db.expenses)..where((t) => t.id.equals(id))).go();
-    debugPrint('DB delete query executed. Rows affected: $rowsAffected');
+    await (_db.delete(_db.expenses)..where((t) => t.id.equals(id))).go();
   }
 }

@@ -12,16 +12,23 @@ import '../../../transactions/presentation/widgets/quick_add_bottom_sheet.dart';
 /// Provider that returns the default 6 categories sorted by frequency of use.
 final quickAddCategoriesProvider = Provider<List<Category>>((ref) {
   final recentlyUsed = ref.watch(recentlyUsedCategoriesProvider);
-  
+
   // The default 6 categories requested
-  final defaultIds = ['food', 'fuel', 'groceries', 'transport', 'entertainment', 'bills'];
-  
+  final defaultIds = [
+    'food',
+    'fuel',
+    'groceries',
+    'transport',
+    'entertainment',
+    'bills',
+  ];
+
   // Sort the defaultIds based on their index in recentlyUsed list.
   final sortedIds = List<String>.from(defaultIds);
   sortedIds.sort((a, b) {
     final indexA = recentlyUsed.indexWhere((c) => c.id == a);
     final indexB = recentlyUsed.indexWhere((c) => c.id == b);
-    
+
     if (indexA != -1 && indexB != -1) {
       return indexA.compareTo(indexB);
     }
@@ -45,7 +52,9 @@ class QuickAddSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.pagePadding,
+          ),
           child: Text(
             'Quick Add',
             style: AppTypography.titleMedium.copyWith(
@@ -59,10 +68,13 @@ class QuickAddSection extends ConsumerWidget {
           height: 90,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.pagePadding,
+            ),
             physics: const BouncingScrollPhysics(),
             itemCount: categories.length,
-            separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.md),
+            separatorBuilder: (context, index) =>
+                const SizedBox(width: AppSpacing.md),
             itemBuilder: (context, index) {
               final cat = categories[index];
               return GestureDetector(
@@ -77,11 +89,15 @@ class QuickAddSection extends ConsumerWidget {
                     color: context.surfaceColor,
                     borderRadius: AppRadius.card,
                     border: Border.all(
-                      color: context.separatorColor.withValues(alpha: isDark ? 0.3 : 0.6),
+                      color: context.separatorColor.withValues(
+                        alpha: isDark ? 0.3 : 0.6,
+                      ),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.15 : 0.03,
+                        ),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),

@@ -18,9 +18,9 @@ class GreetingHeader extends ConsumerWidget {
 
   String _greeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
   }
 
   String _formattedDate() {
@@ -56,8 +56,11 @@ class GreetingHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileNotifierProvider);
     final displayName = profile.name.isEmpty ? 'Syam' : profile.name;
-    final unreadCount = ref.watch(notificationsListProvider).where((n) => !n.isRead).length;
-    final pendingSmsCount = ref.watch(smsDetectionNotifierProvider).where((s) => s.status == SmsDetectionStatus.pending).length;
+    final unreadCount = ref
+        .watch(notificationsListProvider)
+        .where((n) => !n.isRead)
+        .length;
+    final pendingSmsCount = ref.watch(smsDetectionNotifierProvider).length;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
@@ -94,7 +97,10 @@ class GreetingHeader extends ConsumerWidget {
               Stack(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.sms_outlined, color: context.textPrimaryColor),
+                    icon: Icon(
+                      Icons.sms_outlined,
+                      color: context.textPrimaryColor,
+                    ),
                     onPressed: () {
                       HapticFeedback.lightImpact();
                       context.push(AppConstants.routeSmsInbox);
@@ -132,7 +138,10 @@ class GreetingHeader extends ConsumerWidget {
               Stack(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.notifications_none_rounded, color: context.textPrimaryColor),
+                    icon: Icon(
+                      Icons.notifications_none_rounded,
+                      color: context.textPrimaryColor,
+                    ),
                     onPressed: () {
                       HapticFeedback.lightImpact();
                       context.push(AppConstants.routeNotifications);

@@ -7,7 +7,7 @@ class ExpenseEntity {
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
-  
+
   /// Supported types: 'income', 'expense'
   final String transactionType;
 

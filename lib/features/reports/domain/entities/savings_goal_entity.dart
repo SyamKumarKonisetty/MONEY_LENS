@@ -11,12 +11,7 @@ class SavingsGoalEntity {
     required this.year,
   });
 
-  SavingsGoalEntity copyWith({
-    int? id,
-    double? amount,
-    int? month,
-    int? year,
-  }) {
+  SavingsGoalEntity copyWith({int? id, double? amount, int? month, int? year}) {
     return SavingsGoalEntity(
       id: id ?? this.id,
       amount: amount ?? this.amount,

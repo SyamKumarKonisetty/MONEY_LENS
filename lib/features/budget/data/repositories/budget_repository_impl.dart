@@ -20,30 +20,35 @@ class BudgetRepositoryImpl implements BudgetRepository {
   Stream<BudgetEntity?> watchBudget(String category) {
     final query = _db.select(_db.budgets)
       ..where((t) => t.category.equals(category));
-    return query.watchSingleOrNull().map((row) => row != null ? BudgetModel.fromDb(row) : null);
+    return query.watchSingleOrNull().map(
+      (row) => row != null ? BudgetModel.fromDb(row) : null,
+    );
   }
 
   @override
   Stream<List<BudgetEntity>> watchAllBudgets() {
     final query = _db.select(_db.budgets);
-    return query.watch().map((rows) => rows.map((r) => BudgetModel.fromDb(r)).toList());
+    return query.watch().map(
+      (rows) => rows.map((r) => BudgetModel.fromDb(r)).toList(),
+    );
   }
 
   @override
   Future<void> setBudget(BudgetEntity budget) async {
     final existing = await getBudget(budget.category);
     if (existing != null) {
-      final updated = BudgetModel.toCompanion(budget.copyWith(
-        id: existing.id,
-        createdAt: existing.createdAt,
-        updatedAt: DateTime.now(),
-      ));
+      final updated = BudgetModel.toCompanion(
+        budget.copyWith(
+          id: existing.id,
+          createdAt: existing.createdAt,
+          updatedAt: DateTime.now(),
+        ),
+      );
       await _db.update(_db.budgets).replace(updated);
     } else {
-      final inserted = BudgetModel.toCompanion(budget.copyWith(
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ));
+      final inserted = BudgetModel.toCompanion(
+        budget.copyWith(createdAt: DateTime.now(), updatedAt: DateTime.now()),
+      );
       await _db.into(_db.budgets).insert(inserted);
     }
   }

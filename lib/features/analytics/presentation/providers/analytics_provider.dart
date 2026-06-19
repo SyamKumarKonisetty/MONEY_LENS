@@ -22,7 +22,11 @@ final analyticsPeriodProvider =
 bool _isWithinPeriod(DateTime txDate, AnalyticsPeriod period, DateTime now) {
   switch (period) {
     case AnalyticsPeriod.week:
-      final start = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
+      final start = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(const Duration(days: 6));
       return txDate.isAfter(start.subtract(const Duration(seconds: 1)));
     case AnalyticsPeriod.month:
       return txDate.year == now.year && txDate.month == now.month;
@@ -36,17 +40,21 @@ final monthlySummaryProvider = Provider<MonthlySummary>((ref) {
   final all = ref.watch(allTransactionsProvider);
   final period = ref.watch(analyticsPeriodProvider);
   final now = DateTime.now();
-  
+
   final periodExpenses = all
-      .where((t) =>
-          _isWithinPeriod(t.date, period, now) &&
-          t.type == TransactionType.expense)
+      .where(
+        (t) =>
+            _isWithinPeriod(t.date, period, now) &&
+            t.type == TransactionType.expense,
+      )
       .fold(0.0, (sum, t) => sum + t.amount);
 
   final periodIncome = all
-      .where((t) =>
-          _isWithinPeriod(t.date, period, now) &&
-          t.type == TransactionType.income)
+      .where(
+        (t) =>
+            _isWithinPeriod(t.date, period, now) &&
+            t.type == TransactionType.income,
+      )
       .fold(0.0, (sum, t) => sum + t.amount);
 
   return MonthlySummary(
@@ -62,11 +70,13 @@ final categoryBreakdownProvider = Provider<List<CategorySpending>>((ref) {
   final all = ref.watch(allTransactionsProvider);
   final period = ref.watch(analyticsPeriodProvider);
   final now = DateTime.now();
-  
+
   final periodExpenses = all
-      .where((t) =>
-          _isWithinPeriod(t.date, period, now) &&
-          t.type == TransactionType.expense)
+      .where(
+        (t) =>
+            _isWithinPeriod(t.date, period, now) &&
+            t.type == TransactionType.expense,
+      )
       .toList();
 
   final totals = <String, double>{};
@@ -115,17 +125,21 @@ final monthlyTrendsProvider = Provider<List<MonthlyTrend>>((ref) {
     final month = targetDate.month;
 
     final monthExpenses = all
-        .where((t) =>
-            t.date.year == year &&
-            t.date.month == month &&
-            t.type == TransactionType.expense)
+        .where(
+          (t) =>
+              t.date.year == year &&
+              t.date.month == month &&
+              t.type == TransactionType.expense,
+        )
         .fold(0.0, (sum, t) => sum + t.amount);
 
     final monthIncome = all
-        .where((t) =>
-            t.date.year == year &&
-            t.date.month == month &&
-            t.type == TransactionType.income)
+        .where(
+          (t) =>
+              t.date.year == year &&
+              t.date.month == month &&
+              t.type == TransactionType.income,
+        )
         .fold(0.0, (sum, t) => sum + t.amount);
 
     trends.add(

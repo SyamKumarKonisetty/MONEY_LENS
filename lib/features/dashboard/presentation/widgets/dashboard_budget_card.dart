@@ -86,9 +86,15 @@ class DashboardBudgetCard extends ConsumerWidget {
                         borderRadius: AppRadius.circularMd,
                       ),
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                     ),
-                    child: const Text('Configure Budget', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Configure Budget',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),
@@ -104,9 +110,10 @@ class DashboardBudgetCard extends ConsumerWidget {
 
     String? alertMessage;
     Color alertColor = context.successColor;
-    
+
     if (percentUsed >= 100.0) {
-      alertMessage = '🚨 Budget Exceeded by ${CurrencyFormatter.compact(summary.totalSpent - summary.totalLimit)}!';
+      alertMessage =
+          '🚨 Budget Exceeded by ${CurrencyFormatter.compact(summary.totalSpent - summary.totalLimit)}!';
       alertColor = context.errorColor;
     } else if (percentUsed >= 90.0) {
       alertMessage = '⚠️ Warning: 90%+ of monthly budget used!';
@@ -171,7 +178,9 @@ class DashboardBudgetCard extends ConsumerWidget {
                   borderRadius: AppRadius.circularFull,
                 ),
                 child: Text(
-                  isOverBudget ? 'Budget Exceeded' : '${percentUsed.toStringAsFixed(0)}% Used',
+                  isOverBudget
+                      ? 'Budget Exceeded'
+                      : '${percentUsed.toStringAsFixed(0)}% Used',
                   style: AppTypography.labelSmall.copyWith(
                     color: isOverBudget
                         ? context.errorColor
@@ -216,7 +225,9 @@ class DashboardBudgetCard extends ConsumerWidget {
                 amount: summary.totalRemaining.abs(),
                 alignRight: true,
                 prefixSign: summary.totalRemaining < 0 ? '−' : '',
-                color: summary.totalRemaining < 0 ? context.errorColor : context.successColor,
+                color: summary.totalRemaining < 0
+                    ? context.errorColor
+                    : context.successColor,
               ),
             ],
           ),
@@ -224,7 +235,10 @@ class DashboardBudgetCard extends ConsumerWidget {
           if (alertMessage != null) ...[
             const SizedBox(height: AppSpacing.md),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: 8,
+              ),
               decoration: BoxDecoration(
                 color: alertColor.withValues(alpha: 0.1),
                 borderRadius: AppRadius.circularMd,
@@ -232,7 +246,13 @@ class DashboardBudgetCard extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  Icon(percentUsed >= 100.0 ? Icons.error_rounded : Icons.warning_rounded, color: alertColor, size: 16),
+                  Icon(
+                    percentUsed >= 100.0
+                        ? Icons.error_rounded
+                        : Icons.warning_rounded,
+                    color: alertColor,
+                    size: 16,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -266,7 +286,9 @@ class DashboardBudgetCard extends ConsumerWidget {
               Text(
                 '${CurrencyFormatter.compact(safeDaily)} / day available',
                 style: AppTypography.labelLarge.copyWith(
-                  color: safeDaily > 0 ? context.successColor : context.errorColor,
+                  color: safeDaily > 0
+                      ? context.successColor
+                      : context.errorColor,
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),
@@ -297,8 +319,9 @@ class _BudgetDetailItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment:
-          alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: alignRight
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
         Text(
           label,

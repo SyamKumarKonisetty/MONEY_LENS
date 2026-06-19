@@ -12,10 +12,12 @@ class InAppNotificationBanner extends ConsumerStatefulWidget {
   const InAppNotificationBanner({super.key});
 
   @override
-  ConsumerState<InAppNotificationBanner> createState() => _InAppNotificationBannerState();
+  ConsumerState<InAppNotificationBanner> createState() =>
+      _InAppNotificationBannerState();
 }
 
-class _InAppNotificationBannerState extends ConsumerState<InAppNotificationBanner>
+class _InAppNotificationBannerState
+    extends ConsumerState<InAppNotificationBanner>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
@@ -32,10 +34,7 @@ class _InAppNotificationBannerState extends ConsumerState<InAppNotificationBanne
     _offsetAnimation = Tween<Offset>(
       begin: const Offset(0.0, -1.5),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
   }
 
   @override
@@ -85,10 +84,14 @@ class _InAppNotificationBannerState extends ConsumerState<InAppNotificationBanne
             child: Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E1E).withValues(alpha: 0.95) : Colors.white.withValues(alpha: 0.95),
+                color: isDark
+                    ? const Color(0xFF1E1E1E).withValues(alpha: 0.95)
+                    : Colors.white.withValues(alpha: 0.95),
                 borderRadius: AppRadius.card,
                 border: Border.all(
-                  color: context.separatorColor.withValues(alpha: isDark ? 0.3 : 0.6),
+                  color: context.separatorColor.withValues(
+                    alpha: isDark ? 0.3 : 0.6,
+                  ),
                 ),
               ),
               child: Row(
@@ -103,10 +106,10 @@ class _InAppNotificationBannerState extends ConsumerState<InAppNotificationBanne
                       item.type == 'achievement'
                           ? Icons.emoji_events_rounded
                           : item.type == 'budget'
-                              ? Icons.warning_amber_rounded
-                              : item.type == 'reminder'
-                                  ? Icons.chat_bubble_outline_rounded
-                                  : Icons.notifications_active_rounded,
+                          ? Icons.warning_amber_rounded
+                          : item.type == 'reminder'
+                          ? Icons.chat_bubble_outline_rounded
+                          : Icons.notifications_active_rounded,
                       color: context.primaryColor,
                       size: 24,
                     ),
@@ -141,26 +144,45 @@ class _InAppNotificationBannerState extends ConsumerState<InAppNotificationBanne
                               TextButton(
                                 onPressed: () {
                                   _controller.reverse().then((_) {
-                                    ref.read(inAppBannerProvider.notifier).dismissBanner();
+                                    ref
+                                        .read(inAppBannerProvider.notifier)
+                                        .dismissBanner();
                                   });
                                 },
-                                child: const Text('Skip', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                child: const Text(
+                                  'Skip',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                               const SizedBox(width: AppSpacing.sm),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: context.primaryColor,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.md,
+                                    vertical: 4,
+                                  ),
                                   minimumSize: Size.zero,
                                 ),
                                 onPressed: () {
                                   _controller.reverse().then((_) {
-                                    ref.read(inAppBannerProvider.notifier).dismissBanner();
+                                    ref
+                                        .read(inAppBannerProvider.notifier)
+                                        .dismissBanner();
                                     showAddTransactionSheet(context);
                                   });
                                 },
-                                child: const Text('Add Expense', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                child: const Text(
+                                  'Add Expense',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -170,7 +192,11 @@ class _InAppNotificationBannerState extends ConsumerState<InAppNotificationBanne
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   IconButton(
-                    icon: Icon(Icons.close_rounded, color: context.textSecondaryColor, size: 18),
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: context.textSecondaryColor,
+                      size: 18,
+                    ),
                     onPressed: () {
                       _controller.reverse().then((_) {
                         ref.read(inAppBannerProvider.notifier).dismissBanner();

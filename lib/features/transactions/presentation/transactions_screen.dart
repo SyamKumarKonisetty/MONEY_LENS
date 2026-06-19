@@ -54,7 +54,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         notes: tx.note,
         createdAt: tx.date,
         updatedAt: tx.date,
-        transactionType: tx.type == TransactionType.income ? 'income' : 'expense',
+        transactionType: tx.type == TransactionType.income
+            ? 'income'
+            : 'expense',
       ),
     );
     showModalBottomSheet(
@@ -103,7 +105,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 final id = int.tryParse(tx.id);
                 if (id != null) {
                   try {
-                    await ref.read(expenseNotifierProvider.notifier).deleteExpense(id);
+                    await ref
+                        .read(expenseNotifierProvider.notifier)
+                        .deleteExpense(id);
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -224,28 +228,39 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                             onDismissed: (direction) async {
                               final expenseId = int.tryParse(tx.id);
                               if (expenseId != null) {
-                                final expenseState = ref.read(expenseNotifierProvider);
-                                final expense = expenseState.expenses.cast<ExpenseEntity>().firstWhere(
-                                  (e) => e.id == expenseId,
-                                  orElse: () => ExpenseEntity(
-                                    id: expenseId,
-                                    title: tx.title,
-                                    amount: tx.amount,
-                                    category: tx.categoryId,
-                                    notes: tx.note,
-                                    createdAt: tx.date,
-                                    updatedAt: tx.date,
-                                    transactionType: tx.type == TransactionType.income ? 'income' : 'expense',
-                                  ),
+                                final expenseState = ref.read(
+                                  expenseNotifierProvider,
                                 );
+                                final expense = expenseState.expenses
+                                    .cast<ExpenseEntity>()
+                                    .firstWhere(
+                                      (e) => e.id == expenseId,
+                                      orElse: () => ExpenseEntity(
+                                        id: expenseId,
+                                        title: tx.title,
+                                        amount: tx.amount,
+                                        category: tx.categoryId,
+                                        notes: tx.note,
+                                        createdAt: tx.date,
+                                        updatedAt: tx.date,
+                                        transactionType:
+                                            tx.type == TransactionType.income
+                                            ? 'income'
+                                            : 'expense',
+                                      ),
+                                    );
 
                                 try {
-                                  await ref.read(expenseNotifierProvider.notifier).deleteExpense(expenseId);
+                                  await ref
+                                      .read(expenseNotifierProvider.notifier)
+                                      .deleteExpense(expenseId);
                                 } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('Unable to delete transaction'),
+                                        content: Text(
+                                          'Unable to delete transaction',
+                                        ),
                                         behavior: SnackBarBehavior.floating,
                                       ),
                                     );
@@ -254,25 +269,39 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                                 }
 
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).clearSnackBars();
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).clearSnackBars();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Deleted "${expense.title}"'),
+                                      content: Text(
+                                        'Deleted "${expense.title}"',
+                                      ),
                                       behavior: SnackBarBehavior.floating,
-                                      backgroundColor: context.isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                                      backgroundColor: context.isDark
+                                          ? const Color(0xFF1C1C1E)
+                                          : Colors.white,
                                       elevation: 4,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
                                       action: SnackBarAction(
                                         label: 'Undo',
                                         textColor: context.primaryColor,
                                         onPressed: () async {
-                                          await ref.read(expenseNotifierProvider.notifier).addExpense(
-                                            title: expense.title,
-                                            amount: expense.amount,
-                                            category: expense.category,
-                                            notes: expense.notes,
-                                            transactionType: expense.transactionType,
-                                          );
+                                          await ref
+                                              .read(
+                                                expenseNotifierProvider
+                                                    .notifier,
+                                              )
+                                              .addExpense(
+                                                title: expense.title,
+                                                amount: expense.amount,
+                                                category: expense.category,
+                                                notes: expense.notes,
+                                                transactionType:
+                                                    expense.transactionType,
+                                              );
                                         },
                                       ),
                                       duration: const Duration(seconds: 4),
@@ -283,9 +312,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                             },
                             background: Container(
                               alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: AppSpacing.xl),
+                              padding: const EdgeInsets.only(
+                                right: AppSpacing.xl,
+                              ),
                               decoration: BoxDecoration(
-                                color: context.errorColor.withValues(alpha: 0.15),
+                                color: context.errorColor.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
@@ -300,12 +333,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: AppSpacing.sm),
-                                  Icon(Icons.delete_rounded, color: context.errorColor, size: 20),
+                                  Icon(
+                                    Icons.delete_rounded,
+                                    color: context.errorColor,
+                                    size: 20,
+                                  ),
                                 ],
                               ),
                             ),
                             child: GestureDetector(
-                              onTap: () => _openEditBottomSheet(context, ref, tx),
+                              onTap: () =>
+                                  _openEditBottomSheet(context, ref, tx),
                               onLongPress: () =>
                                   _showDeleteConfirmation(context, ref, tx),
                               child: TransactionListTile(transaction: tx),

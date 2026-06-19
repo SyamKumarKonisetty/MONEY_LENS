@@ -12,7 +12,8 @@ import 'package:money_lens/features/dashboard/presentation/widgets/quick_add_sec
 /// Fake repository for testing.
 class FakeExpenseRepository implements ExpenseRepository {
   final List<ExpenseEntity> _items = [];
-  final StreamController<List<ExpenseEntity>> _controller = StreamController<List<ExpenseEntity>>.broadcast();
+  final StreamController<List<ExpenseEntity>> _controller =
+      StreamController<List<ExpenseEntity>>.broadcast();
 
   FakeExpenseRepository() {
     _emit();
@@ -23,14 +24,15 @@ class FakeExpenseRepository implements ExpenseRepository {
   }
 
   @override
-  Future<List<ExpenseEntity>> getAllExpenses() async => List.unmodifiable(_items);
+  Future<List<ExpenseEntity>> getAllExpenses() async =>
+      List.unmodifiable(_items);
 
   @override
   Stream<List<ExpenseEntity>> watchAllExpenses() => _controller.stream;
 
   @override
   Future<int> addExpense(ExpenseEntity expense) async {
-    final newItem = expense.id == null 
+    final newItem = expense.id == null
         ? expense.copyWith(id: _items.length + 1)
         : expense;
     _items.add(newItem);
@@ -73,12 +75,14 @@ void main() {
     expect(container.read(currentMonthNetBalanceProvider), 0.0);
 
     // Add Income ₹1000
-    await container.read(expenseNotifierProvider.notifier).addExpense(
-      title: 'Salary',
-      amount: 1000.0,
-      category: 'Freelance',
-      transactionType: 'income',
-    );
+    await container
+        .read(expenseNotifierProvider.notifier)
+        .addExpense(
+          title: 'Salary',
+          amount: 1000.0,
+          category: 'Freelance',
+          transactionType: 'income',
+        );
 
     // Dashboard Income must increase by ₹1000
     // Dashboard Expense must remain unchanged
@@ -87,12 +91,14 @@ void main() {
     expect(container.read(currentMonthNetBalanceProvider), 1000.0);
 
     // Add Expense ₹500
-    await container.read(expenseNotifierProvider.notifier).addExpense(
-      title: 'Lunch',
-      amount: 500.0,
-      category: 'Food',
-      transactionType: 'expense',
-    );
+    await container
+        .read(expenseNotifierProvider.notifier)
+        .addExpense(
+          title: 'Lunch',
+          amount: 500.0,
+          category: 'Food',
+          transactionType: 'expense',
+        );
 
     // Dashboard Expense must increase by ₹500
     // Dashboard Income must remain unchanged
@@ -114,12 +120,14 @@ void main() {
     );
 
     // Add an income transaction
-    await container.read(expenseNotifierProvider.notifier).addExpense(
-      title: 'Salary',
-      amount: 1000.0,
-      category: 'Freelance',
-      transactionType: 'income',
-    );
+    await container
+        .read(expenseNotifierProvider.notifier)
+        .addExpense(
+          title: 'Salary',
+          amount: 1000.0,
+          category: 'Freelance',
+          transactionType: 'income',
+        );
 
     // Check it's registered as income
     var txs = container.read(expenseNotifierProvider).expenses;
@@ -127,12 +135,14 @@ void main() {
     expect(txs.first.transactionType, 'income');
 
     // Update the transaction details but NOT type
-    await container.read(expenseNotifierProvider.notifier).updateExpense(
-      id: txs.first.id!,
-      title: 'Freelance Work',
-      amount: 1200.0,
-      category: 'Freelance',
-    );
+    await container
+        .read(expenseNotifierProvider.notifier)
+        .updateExpense(
+          id: txs.first.id!,
+          title: 'Freelance Work',
+          amount: 1200.0,
+          category: 'Freelance',
+        );
 
     // Verify type is preserved as income, and details updated
     txs = container.read(expenseNotifierProvider).expenses;
@@ -156,28 +166,38 @@ void main() {
     );
 
     // Add Income ₹1000
-    await container.read(expenseNotifierProvider.notifier).addExpense(
-      title: 'Salary',
-      amount: 1000.0,
-      category: 'Freelance',
-      transactionType: 'income',
-    );
+    await container
+        .read(expenseNotifierProvider.notifier)
+        .addExpense(
+          title: 'Salary',
+          amount: 1000.0,
+          category: 'Freelance',
+          transactionType: 'income',
+        );
 
     // Add Expense ₹500
-    await container.read(expenseNotifierProvider.notifier).addExpense(
-      title: 'Lunch',
-      amount: 500.0,
-      category: 'Food',
-      transactionType: 'expense',
-    );
+    await container
+        .read(expenseNotifierProvider.notifier)
+        .addExpense(
+          title: 'Lunch',
+          amount: 500.0,
+          category: 'Food',
+          transactionType: 'expense',
+        );
 
     // Verify initial totals
     expect(container.read(currentMonthIncomeProvider), 1000.0);
     expect(container.read(currentMonthExpensesProvider), 500.0);
 
     // Delete the expense
-    final expenseId = container.read(expenseNotifierProvider).expenses.firstWhere((e) => e.transactionType == 'expense').id!;
-    await container.read(expenseNotifierProvider.notifier).deleteExpense(expenseId);
+    final expenseId = container
+        .read(expenseNotifierProvider)
+        .expenses
+        .firstWhere((e) => e.transactionType == 'expense')
+        .id!;
+    await container
+        .read(expenseNotifierProvider.notifier)
+        .deleteExpense(expenseId);
 
     // Verify expense is removed, totals are updated
     expect(container.read(currentMonthIncomeProvider), 1000.0);
@@ -203,12 +223,14 @@ void main() {
     expect(categories[1].id, 'fuel');
 
     // Add an entertainment transaction (making it the most-used category)
-    await container.read(expenseNotifierProvider.notifier).addExpense(
-      title: 'Movie',
-      amount: 300.0,
-      category: 'Entertainment',
-      transactionType: 'expense',
-    );
+    await container
+        .read(expenseNotifierProvider.notifier)
+        .addExpense(
+          title: 'Movie',
+          amount: 300.0,
+          category: 'Entertainment',
+          transactionType: 'expense',
+        );
 
     // Wait a tick for stream emission
     await Future<void>.delayed(Duration.zero);
@@ -218,18 +240,22 @@ void main() {
     expect(categories[0].id, 'entertainment');
 
     // Add two fuel transactions
-    await container.read(expenseNotifierProvider.notifier).addExpense(
-      title: 'Petrol',
-      amount: 500.0,
-      category: 'Fuel',
-      transactionType: 'expense',
-    );
-    await container.read(expenseNotifierProvider.notifier).addExpense(
-      title: 'Diesel',
-      amount: 1000.0,
-      category: 'Fuel',
-      transactionType: 'expense',
-    );
+    await container
+        .read(expenseNotifierProvider.notifier)
+        .addExpense(
+          title: 'Petrol',
+          amount: 500.0,
+          category: 'Fuel',
+          transactionType: 'expense',
+        );
+    await container
+        .read(expenseNotifierProvider.notifier)
+        .addExpense(
+          title: 'Diesel',
+          amount: 1000.0,
+          category: 'Fuel',
+          transactionType: 'expense',
+        );
     await Future<void>.delayed(Duration.zero);
 
     // Fuel should now be at index 0 (2 usages) and Entertainment at index 1 (1 usage)

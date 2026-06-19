@@ -36,7 +36,8 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   bool get isPinSetup =>
-      _getStoredPin() != null && _prefs.getString('recovery_answer_hash') != null;
+      _getStoredPin() != null &&
+      _prefs.getString('recovery_answer_hash') != null;
   bool get isSmsSetupCompleted => true;
   bool get isAuthenticated => _sessionAuthenticated;
 
@@ -57,7 +58,10 @@ class AuthNotifier extends ChangeNotifier {
 
   void setupPinAndRecovery(String pin, double recoveryIncome, String profile) {
     _prefs.setString('auth_pin', hashPin(pin));
-    _prefs.setString('recovery_answer_hash', hashPin(recoveryIncome.toStringAsFixed(2)));
+    _prefs.setString(
+      'recovery_answer_hash',
+      hashPin(recoveryIncome.toStringAsFixed(2)),
+    );
     _prefs.setString('profile_type', profile);
     _sessionAuthenticated = true; // Auto authenticate on initial setup
     notifyListeners();

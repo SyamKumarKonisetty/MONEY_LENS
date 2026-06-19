@@ -24,8 +24,13 @@ class MonthlySummaryCard extends ConsumerWidget {
         .where((t) => t.date.year == now.year && t.date.month == now.month)
         .toList();
 
-    final thisMonthExpenses = thisMonth.where((t) => t.type == TransactionType.expense).toList();
-    final totalExpenses = thisMonthExpenses.fold(0.0, (sum, t) => sum + t.amount);
+    final thisMonthExpenses = thisMonth
+        .where((t) => t.type == TransactionType.expense)
+        .toList();
+    final totalExpenses = thisMonthExpenses.fold(
+      0.0,
+      (sum, t) => sum + t.amount,
+    );
     final txCount = thisMonthExpenses.length;
 
     var topCategory = 'None';

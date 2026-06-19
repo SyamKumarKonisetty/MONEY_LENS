@@ -26,7 +26,8 @@ class QuickAddBottomSheet extends ConsumerStatefulWidget {
   final Category category;
 
   @override
-  ConsumerState<QuickAddBottomSheet> createState() => _QuickAddBottomSheetState();
+  ConsumerState<QuickAddBottomSheet> createState() =>
+      _QuickAddBottomSheetState();
 }
 
 class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
@@ -138,7 +139,9 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
     final notes = _notesController.text.trim();
 
     try {
-      await ref.read(expenseNotifierProvider.notifier).addExpense(
+      await ref
+          .read(expenseNotifierProvider.notifier)
+          .addExpense(
             title: title,
             amount: _amount,
             category: widget.category.name,
@@ -192,7 +195,10 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
           children: [
             // Category Header Pill
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: 8,
+              ),
               decoration: BoxDecoration(
                 color: widget.category.color.withValues(alpha: 0.12),
                 borderRadius: AppRadius.circularFull,
@@ -203,7 +209,11 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(widget.category.icon, color: widget.category.color, size: 18),
+                  Icon(
+                    widget.category.icon,
+                    color: widget.category.color,
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Quick Add: ${widget.category.name}',
@@ -254,13 +264,17 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    _showDetails ? Icons.remove_circle_outline_rounded : Icons.add_circle_outline_rounded,
+                    _showDetails
+                        ? Icons.remove_circle_outline_rounded
+                        : Icons.add_circle_outline_rounded,
                     size: 16,
                     color: context.textSecondaryColor,
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    _showDetails ? 'Hide Details' : 'Add Title & Notes (Optional)',
+                    _showDetails
+                        ? 'Hide Details'
+                        : 'Add Title & Notes (Optional)',
                     style: AppTypography.bodySmall.copyWith(
                       color: context.textSecondaryColor,
                       fontWeight: FontWeight.w500,
@@ -282,10 +296,14 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
                         children: [
                           TextField(
                             controller: _titleController,
-                            style: AppTypography.bodyMedium.copyWith(color: context.textPrimaryColor),
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: context.textPrimaryColor,
+                            ),
                             decoration: InputDecoration(
                               labelText: 'What was this for?',
-                              labelStyle: TextStyle(color: context.textSecondaryColor),
+                              labelStyle: TextStyle(
+                                color: context.textSecondaryColor,
+                              ),
                               filled: true,
                               fillColor: context.surfaceVariantColor,
                               border: OutlineInputBorder(
@@ -297,10 +315,14 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
                           const SizedBox(height: AppSpacing.sm),
                           TextField(
                             controller: _notesController,
-                            style: AppTypography.bodyMedium.copyWith(color: context.textPrimaryColor),
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: context.textPrimaryColor,
+                            ),
                             decoration: InputDecoration(
                               labelText: 'Notes',
-                              labelStyle: TextStyle(color: context.textSecondaryColor),
+                              labelStyle: TextStyle(
+                                color: context.textSecondaryColor,
+                              ),
                               filled: true,
                               fillColor: context.surfaceVariantColor,
                               border: OutlineInputBorder(
@@ -326,12 +348,8 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    Expanded(
-                      child: _buildDigitButton('.'),
-                    ),
-                    Expanded(
-                      child: _buildDigitButton('0'),
-                    ),
+                    Expanded(child: _buildDigitButton('.')),
+                    Expanded(child: _buildDigitButton('0')),
                     Expanded(
                       child: IconButton(
                         onPressed: _onBackspace,
@@ -355,17 +373,31 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
                   backgroundColor: widget.category.color,
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: context.surfaceVariantColor,
-                  disabledForegroundColor: context.textSecondaryColor.withValues(alpha: 0.5),
-                  shape: RoundedRectangleBorder(borderRadius: AppRadius.circularMd),
+                  disabledForegroundColor: context.textSecondaryColor
+                      .withValues(alpha: 0.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.circularMd,
+                  ),
                   elevation: 0,
                 ),
                 child: _isSaving
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
                       )
-                    : const Text('Save Transaction', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    : const Text(
+                        'Save Transaction',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -376,7 +408,9 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
 
   Widget _buildRow(List<String> digits) {
     return Row(
-      children: digits.map((d) => Expanded(child: _buildDigitButton(d))).toList(),
+      children: digits
+          .map((d) => Expanded(child: _buildDigitButton(d)))
+          .toList(),
     );
   }
 

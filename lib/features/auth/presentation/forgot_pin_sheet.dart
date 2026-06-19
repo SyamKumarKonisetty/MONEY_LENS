@@ -15,8 +15,9 @@ class ForgotPinSheet extends ConsumerStatefulWidget {
 }
 
 class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
-  int _selectedOption = 0; // 0 = none, 1 = Option 1 (Current PIN), 2 = Option 2 (Recovery Answer)
-  
+  int _selectedOption =
+      0; // 0 = none, 1 = Option 1 (Current PIN), 2 = Option 2 (Recovery Answer)
+
   final _formKey1 = GlobalKey<FormState>();
   final _currentPinController = TextEditingController();
   final _newPinController1 = TextEditingController();
@@ -199,7 +200,9 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Choose a verification method to reset your passcode.',
-            style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor),
+            style: AppTypography.bodySmall.copyWith(
+              color: context.textSecondaryColor,
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
 
@@ -227,9 +230,23 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
             // Option 1 Selector
             ListTile(
               leading: Icon(Icons.pin_rounded, color: context.primaryColor),
-              title: Text('Option 1: Verify Current PIN', style: AppTypography.bodyLarge.copyWith(color: context.textPrimaryColor)),
-              subtitle: Text('Enter your active PIN to change it', style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor)),
-              trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: context.textSecondaryColor),
+              title: Text(
+                'Option 1: Verify Current PIN',
+                style: AppTypography.bodyLarge.copyWith(
+                  color: context.textPrimaryColor,
+                ),
+              ),
+              subtitle: Text(
+                'Enter your active PIN to change it',
+                style: AppTypography.bodySmall.copyWith(
+                  color: context.textSecondaryColor,
+                ),
+              ),
+              trailing: Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: context.textSecondaryColor,
+              ),
               onTap: () {
                 setState(() {
                   _selectedOption = 1;
@@ -240,10 +257,27 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
             const Divider(),
             // Option 2 Selector
             ListTile(
-              leading: Icon(Icons.security_rounded, color: context.primaryColor),
-              title: Text('Option 2: Verify Recovery Answer', style: AppTypography.bodyLarge.copyWith(color: context.textPrimaryColor)),
-              subtitle: Text('Answer security question to reset PIN', style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor)),
-              trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: context.textSecondaryColor),
+              leading: Icon(
+                Icons.security_rounded,
+                color: context.primaryColor,
+              ),
+              title: Text(
+                'Option 2: Verify Recovery Answer',
+                style: AppTypography.bodyLarge.copyWith(
+                  color: context.textPrimaryColor,
+                ),
+              ),
+              subtitle: Text(
+                'Answer security question to reset PIN',
+                style: AppTypography.bodySmall.copyWith(
+                  color: context.textSecondaryColor,
+                ),
+              ),
+              trailing: Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: context.textSecondaryColor,
+              ),
               onTap: () {
                 setState(() {
                   _selectedOption = 2;
@@ -256,8 +290,15 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
             // Back Button
             TextButton.icon(
               onPressed: () => setState(() => _selectedOption = 0),
-              icon: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: context.primaryColor),
-              label: Text('Back to options', style: TextStyle(color: context.primaryColor)),
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 14,
+                color: context.primaryColor,
+              ),
+              label: Text(
+                'Back to options',
+                style: TextStyle(color: context.primaryColor),
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             Form(
@@ -281,9 +322,15 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
                     labelText: 'Confirm New PIN',
                     hintText: 'Re-enter new 4-digit PIN',
                     validator: (val) {
-                      if (val == null || val.isEmpty) return 'Confirm PIN cannot be empty';
-                      if (val.length != 4) return 'PIN must be exactly 4 digits';
-                      if (val != _newPinController1.text) return 'Confirm PIN does not match';
+                      if (val == null || val.isEmpty) {
+                        return 'Confirm PIN cannot be empty';
+                      }
+                      if (val.length != 4) {
+                        return 'PIN must be exactly 4 digits';
+                      }
+                      if (val != _newPinController1.text) {
+                        return 'Confirm PIN does not match';
+                      }
                       return null;
                     },
                   ),
@@ -296,12 +343,29 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: context.primaryColor,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         elevation: 0,
                       ),
                       child: _isLoading
-                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
-                          : Text('Reset PIN', style: AppTypography.titleMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              'Reset PIN',
+                              style: AppTypography.titleMedium.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -311,21 +375,34 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
             // Back Button
             TextButton.icon(
               onPressed: () => setState(() => _selectedOption = 0),
-              icon: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: context.primaryColor),
-              label: Text('Back to options', style: TextStyle(color: context.primaryColor)),
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 14,
+                color: context.primaryColor,
+              ),
+              label: Text(
+                'Back to options',
+                style: TextStyle(color: context.primaryColor),
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             if (!_isAnswerVerified) ...[
               Text(
                 'Question:',
-                style: AppTypography.bodyMedium.copyWith(color: context.textSecondaryColor, fontWeight: FontWeight.bold),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: context.textSecondaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 ref.watch(authNotifierProvider).profileType == 'student'
                     ? 'What is your expected monthly salary?'
                     : 'What is your monthly salary?',
-                style: AppTypography.titleMedium.copyWith(color: context.textPrimaryColor, fontWeight: FontWeight.w600),
+                style: AppTypography.titleMedium.copyWith(
+                  color: context.textPrimaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: AppSpacing.xl),
               TextFormField(
@@ -338,7 +415,10 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
                   labelStyle: TextStyle(color: context.textSecondaryColor),
                   filled: true,
                   fillColor: context.surfaceVariantColor,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.xxl),
@@ -350,9 +430,14 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.primaryColor,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
-                  child: const Text('Verify Answer', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Verify Answer',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ] else ...[
@@ -362,7 +447,10 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
                   children: [
                     const Text(
                       'Answer verified! Enter your new PIN below.',
-                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _buildPinField(
@@ -376,9 +464,15 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
                       labelText: 'Confirm New PIN',
                       hintText: 'Re-enter new 4-digit PIN',
                       validator: (val) {
-                        if (val == null || val.isEmpty) return 'Confirm PIN cannot be empty';
-                        if (val.length != 4) return 'PIN must be exactly 4 digits';
-                        if (val != _newPinController2.text) return 'Confirm PIN does not match';
+                        if (val == null || val.isEmpty) {
+                          return 'Confirm PIN cannot be empty';
+                        }
+                        if (val.length != 4) {
+                          return 'PIN must be exactly 4 digits';
+                        }
+                        if (val != _newPinController2.text) {
+                          return 'Confirm PIN does not match';
+                        }
                         return null;
                       },
                     ),
@@ -391,19 +485,36 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: context.primaryColor,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                           elevation: 0,
                         ),
                         child: _isLoading
-                            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
-                            : Text('Reset PIN', style: AppTypography.titleMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Text(
+                                'Reset PIN',
+                                style: AppTypography.titleMedium.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ]
-          ]
+            ],
+          ],
         ],
       ),
     );
@@ -430,7 +541,9 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
       ],
       decoration: InputDecoration(
         labelText: labelText,
-        labelStyle: AppTypography.bodyMedium.copyWith(color: context.textSecondaryColor),
+        labelStyle: AppTypography.bodyMedium.copyWith(
+          color: context.textSecondaryColor,
+        ),
         hintText: hintText,
         hintStyle: AppTypography.bodyMedium.copyWith(
           color: context.textSecondaryColor.withValues(alpha: 0.5),
@@ -453,7 +566,8 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
         ),
         errorStyle: const TextStyle(height: 0.8),
       ),
-      validator: validator ??
+      validator:
+          validator ??
           (val) {
             if (val == null || val.isEmpty) return '$labelText cannot be empty';
             if (val.length != 4) return 'PIN must be exactly 4 digits';

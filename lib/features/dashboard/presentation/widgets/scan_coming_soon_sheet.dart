@@ -46,10 +46,12 @@ class ScanComingSoonSheet extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<ScanComingSoonSheet> createState() => _ScanComingSoonSheetState();
+  ConsumerState<ScanComingSoonSheet> createState() =>
+      _ScanComingSoonSheetState();
 }
 
-class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with SingleTickerProviderStateMixin {
+class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet>
+    with SingleTickerProviderStateMixin {
   // Demo Receipts list
   final List<MockReceipt> _demoReceipts = [
     MockReceipt(
@@ -74,10 +76,7 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
       gstNo: '27AABCT4321A1Z5',
       paymentMethod: 'Paytm Wallet',
       confidence: 'High Confidence (95%)',
-      items: [
-        'UberGo Ride Fare - ₹210.00',
-        'Surge Pricing - ₹35.00',
-      ],
+      items: ['UberGo Ride Fare - ₹210.00', 'Surge Pricing - ₹35.00'],
     ),
     MockReceipt(
       merchant: 'Apollo Pharmacy',
@@ -101,9 +100,7 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
       gstNo: '29SHELL5678Q1Z1',
       paymentMethod: 'Debit Card',
       confidence: 'High Confidence (97%)',
-      items: [
-        'Power Petrol 13.2L - ₹1500.00',
-      ],
+      items: ['Power Petrol 13.2L - ₹1500.00'],
     ),
   ];
 
@@ -194,11 +191,14 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
 
     HapticFeedback.mediumImpact();
 
-    await ref.read(expenseNotifierProvider.notifier).addExpense(
+    await ref
+        .read(expenseNotifierProvider.notifier)
+        .addExpense(
           title: merchant,
           amount: amt,
           category: _selectedCategory,
-          notes: 'OCR Scanned • Inv: ${_invoiceController.text} • GST: ${_gstController.text}',
+          notes:
+              'OCR Scanned • Inv: ${_invoiceController.text} • GST: ${_gstController.text}',
           transactionType: 'expense',
         );
 
@@ -257,7 +257,7 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
             else if (_isScanning)
               _buildScanningScreen()
             else if (_showReview)
-              _buildReviewScreen()
+              _buildReviewScreen(),
           ],
         ),
       ),
@@ -279,7 +279,9 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
         const SizedBox(height: 4),
         Text(
           'Select a demo receipt to simulate OCR camera capture.',
-          style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor),
+          style: AppTypography.bodySmall.copyWith(
+            color: context.textSecondaryColor,
+          ),
         ),
         const SizedBox(height: AppSpacing.xl),
 
@@ -303,10 +305,16 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
                   margin: const EdgeInsets.only(right: AppSpacing.md),
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: isSelected ? context.primaryColor.withValues(alpha: 0.12) : context.surfaceColor,
+                    color: isSelected
+                        ? context.primaryColor.withValues(alpha: 0.12)
+                        : context.surfaceColor,
                     borderRadius: AppRadius.card,
                     border: Border.all(
-                      color: isSelected ? context.primaryColor : context.separatorColor.withValues(alpha: isDark ? 0.3 : 0.6),
+                      color: isSelected
+                          ? context.primaryColor
+                          : context.separatorColor.withValues(
+                              alpha: isDark ? 0.3 : 0.6,
+                            ),
                       width: isSelected ? 1.5 : 1.0,
                     ),
                   ),
@@ -316,14 +324,20 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
                     children: [
                       Text(
                         r.merchant,
-                        style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold, color: context.textPrimaryColor),
+                        style: AppTypography.labelLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: context.textPrimaryColor,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         CurrencyFormatter.compact(r.amount),
-                        style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor, fontWeight: FontWeight.bold),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: context.textSecondaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -341,7 +355,9 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[100],
             borderRadius: AppRadius.card,
-            border: Border.all(color: context.separatorColor.withValues(alpha: 0.3)),
+            border: Border.all(
+              color: context.separatorColor.withValues(alpha: 0.3),
+            ),
           ),
           child: Stack(
             children: [
@@ -350,22 +366,38 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
               Positioned(
                 left: 0,
                 top: 0,
-                child: Icon(Icons.crop_free_rounded, color: context.primaryColor, size: 28),
+                child: Icon(
+                  Icons.crop_free_rounded,
+                  color: context.primaryColor,
+                  size: 28,
+                ),
               ),
               Positioned(
                 right: 0,
                 top: 0,
-                child: Icon(Icons.crop_free_rounded, color: context.primaryColor, size: 28),
+                child: Icon(
+                  Icons.crop_free_rounded,
+                  color: context.primaryColor,
+                  size: 28,
+                ),
               ),
               Positioned(
                 left: 0,
                 bottom: 0,
-                child: Icon(Icons.crop_free_rounded, color: context.primaryColor, size: 28),
+                child: Icon(
+                  Icons.crop_free_rounded,
+                  color: context.primaryColor,
+                  size: 28,
+                ),
               ),
               Positioned(
                 right: 0,
                 bottom: 0,
-                child: Icon(Icons.crop_free_rounded, color: context.primaryColor, size: 28),
+                child: Icon(
+                  Icons.crop_free_rounded,
+                  color: context.primaryColor,
+                  size: 28,
+                ),
               ),
             ],
           ),
@@ -380,11 +412,16 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: AppRadius.circularMd),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.circularMd,
+                    ),
                     side: BorderSide(color: context.separatorColor),
                     foregroundColor: context.textPrimaryColor,
                   ),
-                  child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ),
@@ -395,12 +432,20 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
                 height: 52,
                 child: ElevatedButton.icon(
                   onPressed: _startScan,
-                  icon: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white),
-                  label: const Text('Confirm & Scan OCR', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  icon: const Icon(
+                    Icons.qr_code_scanner_rounded,
+                    color: Colors.white,
+                  ),
+                  label: const Text(
+                    'Confirm & Scan OCR',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.primaryColor,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: AppRadius.circularMd),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.circularMd,
+                    ),
                     elevation: 2,
                   ),
                 ),
@@ -425,7 +470,9 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
         const SizedBox(height: 8),
         Text(
           'Extracting items, GST, payment, and totals.',
-          style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor),
+          style: AppTypography.bodySmall.copyWith(
+            color: context.textSecondaryColor,
+          ),
         ),
         const SizedBox(height: AppSpacing.xl),
 
@@ -439,11 +486,17 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: context.isDark ? const Color(0xFF1C1C1E) : Colors.grey[50],
+                    color: context.isDark
+                        ? const Color(0xFF1C1C1E)
+                        : Colors.grey[50],
                     borderRadius: AppRadius.card,
-                    border: Border.all(color: context.separatorColor.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: context.separatorColor.withValues(alpha: 0.3),
+                    ),
                   ),
-                  child: _buildThermalReceiptView(_demoReceipts[_selectedReceiptIndex]),
+                  child: _buildThermalReceiptView(
+                    _demoReceipts[_selectedReceiptIndex],
+                  ),
                 ),
                 // Laser line overlay
                 Positioned(
@@ -480,7 +533,10 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
         const SizedBox(height: AppSpacing.md),
         Text(
           '${(_scanProgress * 100).toStringAsFixed(0)}% Analyzed',
-          style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor, fontWeight: FontWeight.bold),
+          style: AppTypography.bodySmall.copyWith(
+            color: context.textSecondaryColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: AppSpacing.xl),
       ],
@@ -511,7 +567,11 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
               ),
               child: Text(
                 receipt.confidence,
-                style: AppTypography.labelSmall.copyWith(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 10),
+                style: AppTypography.labelSmall.copyWith(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
               ),
             ),
           ],
@@ -521,13 +581,18 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
         // Form Fields
         TextField(
           controller: _merchantController,
-          style: AppTypography.bodyLarge.copyWith(color: context.textPrimaryColor),
+          style: AppTypography.bodyLarge.copyWith(
+            color: context.textPrimaryColor,
+          ),
           decoration: InputDecoration(
             labelText: 'Merchant Name',
             labelStyle: TextStyle(color: context.textSecondaryColor),
             filled: true,
             fillColor: context.surfaceColor,
-            border: OutlineInputBorder(borderRadius: AppRadius.circularMd, borderSide: BorderSide.none),
+            border: OutlineInputBorder(
+              borderRadius: AppRadius.circularMd,
+              borderSide: BorderSide.none,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -538,13 +603,18 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
               child: TextField(
                 controller: _amountController,
                 keyboardType: TextInputType.number,
-                style: AppTypography.bodyLarge.copyWith(color: context.textPrimaryColor),
+                style: AppTypography.bodyLarge.copyWith(
+                  color: context.textPrimaryColor,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Amount (₹)',
                   labelStyle: TextStyle(color: context.textSecondaryColor),
                   filled: true,
                   fillColor: context.surfaceColor,
-                  border: OutlineInputBorder(borderRadius: AppRadius.circularMd, borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderRadius: AppRadius.circularMd,
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
@@ -563,7 +633,10 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
                     items: AppCategories.expense.map((cat) {
                       return DropdownMenuItem<String>(
                         value: cat.name,
-                        child: Text(cat.name, style: TextStyle(color: context.textPrimaryColor)),
+                        child: Text(
+                          cat.name,
+                          style: TextStyle(color: context.textPrimaryColor),
+                        ),
                       );
                     }).toList(),
                     onChanged: (val) {
@@ -581,13 +654,18 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
 
         TextField(
           controller: _invoiceController,
-          style: AppTypography.bodyLarge.copyWith(color: context.textPrimaryColor),
+          style: AppTypography.bodyLarge.copyWith(
+            color: context.textPrimaryColor,
+          ),
           decoration: InputDecoration(
             labelText: 'Invoice Number',
             labelStyle: TextStyle(color: context.textSecondaryColor),
             filled: true,
             fillColor: context.surfaceColor,
-            border: OutlineInputBorder(borderRadius: AppRadius.circularMd, borderSide: BorderSide.none),
+            border: OutlineInputBorder(
+              borderRadius: AppRadius.circularMd,
+              borderSide: BorderSide.none,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -597,13 +675,18 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
             Expanded(
               child: TextField(
                 controller: _gstController,
-                style: AppTypography.bodyLarge.copyWith(color: context.textPrimaryColor),
+                style: AppTypography.bodyLarge.copyWith(
+                  color: context.textPrimaryColor,
+                ),
                 decoration: InputDecoration(
                   labelText: 'GSTIN',
                   labelStyle: TextStyle(color: context.textSecondaryColor),
                   filled: true,
                   fillColor: context.surfaceColor,
-                  border: OutlineInputBorder(borderRadius: AppRadius.circularMd, borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderRadius: AppRadius.circularMd,
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
@@ -611,13 +694,18 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
             Expanded(
               child: TextField(
                 controller: _paymentController,
-                style: AppTypography.bodyLarge.copyWith(color: context.textPrimaryColor),
+                style: AppTypography.bodyLarge.copyWith(
+                  color: context.textPrimaryColor,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Payment Method',
                   labelStyle: TextStyle(color: context.textSecondaryColor),
                   filled: true,
                   fillColor: context.surfaceColor,
-                  border: OutlineInputBorder(borderRadius: AppRadius.circularMd, borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderRadius: AppRadius.circularMd,
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
@@ -639,11 +727,16 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
                     });
                   },
                   style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: AppRadius.circularMd),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.circularMd,
+                    ),
                     side: BorderSide(color: context.separatorColor),
                     foregroundColor: context.textPrimaryColor,
                   ),
-                  child: const Text('Retake', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Retake',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ),
@@ -655,11 +748,16 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
                 child: ElevatedButton.icon(
                   onPressed: _saveTransaction,
                   icon: const Icon(Icons.check_rounded, color: Colors.white),
-                  label: const Text('Save Transaction', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  label: const Text(
+                    'Save Transaction',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.primaryColor,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: AppRadius.circularMd),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.circularMd,
+                    ),
                     elevation: 2,
                   ),
                 ),
@@ -680,59 +778,120 @@ class _ScanComingSoonSheetState extends ConsumerState<ScanComingSoonSheet> with 
             children: [
               Text(
                 r.merchant.toUpperCase(),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'monospace', color: Colors.black54),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  fontFamily: 'monospace',
+                  color: Colors.black54,
+                ),
               ),
               const Text(
                 'OFFICIAL RECEIPT',
-                style: TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.black38),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontFamily: 'monospace',
+                  color: Colors.black38,
+                ),
               ),
             ],
           ),
         ),
         const Divider(color: Colors.black26, thickness: 1, height: 24),
-        Text('Invoice: ${r.invoiceNo}', style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.black54)),
-        Text('GSTIN: ${r.gstNo}', style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.black54)),
-        Text('Date: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}', style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.black54)),
+        Text(
+          'Invoice: ${r.invoiceNo}',
+          style: const TextStyle(
+            fontSize: 10,
+            fontFamily: 'monospace',
+            color: Colors.black54,
+          ),
+        ),
+        Text(
+          'GSTIN: ${r.gstNo}',
+          style: const TextStyle(
+            fontSize: 10,
+            fontFamily: 'monospace',
+            color: Colors.black54,
+          ),
+        ),
+        Text(
+          'Date: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}',
+          style: const TextStyle(
+            fontSize: 10,
+            fontFamily: 'monospace',
+            color: Colors.black54,
+          ),
+        ),
         const Divider(color: Colors.black26, thickness: 1, height: 24),
-        ...r.items.map((it) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      it.split(' - ')[0],
-                      style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.black54),
+        ...r.items.map(
+          (it) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    it.split(' - ')[0],
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                      color: Colors.black54,
                     ),
                   ),
-                  Text(
-                    it.split(' - ')[1],
-                    style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.black54),
+                ),
+                Text(
+                  it.split(' - ')[1],
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontFamily: 'monospace',
+                    color: Colors.black54,
                   ),
-                ],
-              ),
-            )),
+                ),
+              ],
+            ),
+          ),
+        ),
         const Divider(color: Colors.black26, thickness: 1, height: 24),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
               'TOTAL',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'monospace', color: Colors.black87),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                fontFamily: 'monospace',
+                color: Colors.black87,
+              ),
             ),
             Text(
               '₹${r.amount.toStringAsFixed(2)}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'monospace', color: Colors.black87),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                fontFamily: 'monospace',
+                color: Colors.black87,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 6),
-        Text('Paid via: ${r.paymentMethod}', style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.black38)),
+        Text(
+          'Paid via: ${r.paymentMethod}',
+          style: const TextStyle(
+            fontSize: 10,
+            fontFamily: 'monospace',
+            color: Colors.black38,
+          ),
+        ),
         const SizedBox(height: 10),
         const Center(
           child: Text(
             '*** THANK YOU ***',
-            style: TextStyle(fontSize: 9, fontFamily: 'monospace', color: Colors.black26),
+            style: TextStyle(
+              fontSize: 9,
+              fontFamily: 'monospace',
+              color: Colors.black26,
+            ),
           ),
         ),
       ],

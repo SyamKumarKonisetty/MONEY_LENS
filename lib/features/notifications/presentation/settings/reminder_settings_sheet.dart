@@ -73,7 +73,9 @@ class ReminderSettingsSheet extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Configure daily, weekly, and monthly notification preferences.',
-            style: AppTypography.bodySmall.copyWith(color: context.textSecondaryColor),
+            style: AppTypography.bodySmall.copyWith(
+              color: context.textSecondaryColor,
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
 
@@ -90,7 +92,11 @@ class ReminderSettingsSheet extends ConsumerWidget {
                     title: 'Reminder Frequency',
                     subtitle: settings.reminderFrequency,
                     onTap: () {
-                      _showFrequencyPicker(context, ref, settings.reminderFrequency);
+                      _showFrequencyPicker(
+                        context,
+                        ref,
+                        settings.reminderFrequency,
+                      );
                     },
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -138,7 +144,11 @@ class ReminderSettingsSheet extends ConsumerWidget {
                     title: 'Weekly Summary Schedule',
                     subtitle: settings.weeklyDayAndTime,
                     onTap: () {
-                      _showWeeklyPicker(context, ref, settings.weeklyDayAndTime);
+                      _showWeeklyPicker(
+                        context,
+                        ref,
+                        settings.weeklyDayAndTime,
+                      );
                     },
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -150,7 +160,11 @@ class ReminderSettingsSheet extends ConsumerWidget {
                     title: 'Monthly Summary Schedule',
                     subtitle: settings.monthlyDayAndTime,
                     onTap: () {
-                      _showMonthlyPicker(context, ref, settings.monthlyDayAndTime);
+                      _showMonthlyPicker(
+                        context,
+                        ref,
+                        settings.monthlyDayAndTime,
+                      );
                     },
                   ),
                 ],
@@ -175,21 +189,29 @@ class ReminderSettingsSheet extends ConsumerWidget {
         color: context.backgroundColor,
         borderRadius: AppRadius.card,
         border: Border.all(
-          color: context.separatorColor.withValues(alpha: context.isDark ? 0.3 : 0.6),
+          color: context.separatorColor.withValues(
+            alpha: context.isDark ? 0.3 : 0.6,
+          ),
         ),
       ),
       child: ListTile(
         leading: Icon(icon, color: context.primaryColor, size: 20),
         title: Text(
           title,
-          style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
+          style: AppTypography.titleMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               subtitle,
-              style: AppTypography.bodyMedium.copyWith(color: context.primaryColor, fontWeight: FontWeight.bold),
+              style: AppTypography.bodyMedium.copyWith(
+                color: context.primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(width: 8),
             const Icon(Icons.arrow_forward_ios_rounded, size: 12),
@@ -200,7 +222,11 @@ class ReminderSettingsSheet extends ConsumerWidget {
     );
   }
 
-  void _showFrequencyPicker(BuildContext context, WidgetRef ref, String current) {
+  void _showFrequencyPicker(
+    BuildContext context,
+    WidgetRef ref,
+    String current,
+  ) {
     final options = ['Daily', 'Weekly', 'Monthly', 'Never'];
     showDialog(
       context: context,
@@ -212,9 +238,13 @@ class ReminderSettingsSheet extends ConsumerWidget {
           children: options.map((opt) {
             return ListTile(
               title: Text(opt),
-              trailing: current == opt ? Icon(Icons.check_rounded, color: context.primaryColor) : null,
+              trailing: current == opt
+                  ? Icon(Icons.check_rounded, color: context.primaryColor)
+                  : null,
               onTap: () {
-                ref.read(notificationSettingsProvider.notifier).setReminderFrequency(opt);
+                ref
+                    .read(notificationSettingsProvider.notifier)
+                    .setReminderFrequency(opt);
                 Navigator.of(ctx).pop();
               },
             );
@@ -236,9 +266,13 @@ class ReminderSettingsSheet extends ConsumerWidget {
           children: days.map((d) {
             return ListTile(
               title: Text(d),
-              trailing: current.startsWith(d) ? Icon(Icons.check_rounded, color: context.primaryColor) : null,
+              trailing: current.startsWith(d)
+                  ? Icon(Icons.check_rounded, color: context.primaryColor)
+                  : null,
               onTap: () {
-                ref.read(notificationSettingsProvider.notifier).setWeeklyTime('$d 10:00');
+                ref
+                    .read(notificationSettingsProvider.notifier)
+                    .setWeeklyTime('$d 10:00');
                 Navigator.of(ctx).pop();
               },
             );
@@ -249,7 +283,11 @@ class ReminderSettingsSheet extends ConsumerWidget {
   }
 
   void _showMonthlyPicker(BuildContext context, WidgetRef ref, String current) {
-    final options = ['Last Day 10:00', '1st of Next Month 09:00', '28th of Month 18:00'];
+    final options = [
+      'Last Day 10:00',
+      '1st of Next Month 09:00',
+      '28th of Month 18:00',
+    ];
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -260,9 +298,13 @@ class ReminderSettingsSheet extends ConsumerWidget {
           children: options.map((opt) {
             return ListTile(
               title: Text(opt),
-              trailing: current == opt ? Icon(Icons.check_rounded, color: context.primaryColor) : null,
+              trailing: current == opt
+                  ? Icon(Icons.check_rounded, color: context.primaryColor)
+                  : null,
               onTap: () {
-                ref.read(notificationSettingsProvider.notifier).setMonthlyTime(opt);
+                ref
+                    .read(notificationSettingsProvider.notifier)
+                    .setMonthlyTime(opt);
                 Navigator.of(ctx).pop();
               },
             );

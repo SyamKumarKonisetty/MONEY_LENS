@@ -37,11 +37,21 @@ class ReportsFilterState {
 
 class ReportsFilterNotifier extends StateNotifier<ReportsFilterState> {
   ReportsFilterNotifier()
-      : super(ReportsFilterState(
+    : super(
+        ReportsFilterState(
           period: TimelinePeriod.thisMonth,
           startDate: DateTime(DateTime.now().year, DateTime.now().month, 1),
-          endDate: DateTime(DateTime.now().year, DateTime.now().month + 1, 0, 23, 59, 59, 999),
-        ));
+          endDate: DateTime(
+            DateTime.now().year,
+            DateTime.now().month + 1,
+            0,
+            23,
+            59,
+            59,
+            999,
+          ),
+        ),
+      );
 
   void setPeriod(TimelinePeriod period) {
     final now = DateTime.now();
@@ -54,8 +64,14 @@ class ReportsFilterNotifier extends StateNotifier<ReportsFilterState> {
         end = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
         break;
       case TimelinePeriod.thisWeek:
-        start = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
-        end = start.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+        start = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(Duration(days: now.weekday - 1));
+        end = start.add(
+          const Duration(days: 6, hours: 23, minutes: 59, seconds: 59),
+        );
         break;
       case TimelinePeriod.thisMonth:
         start = DateTime(now.year, now.month, 1);
@@ -81,9 +97,10 @@ class ReportsFilterNotifier extends StateNotifier<ReportsFilterState> {
   }
 }
 
-final reportsTimelineProvider = StateNotifierProvider<ReportsTimelineNotifier, TimelinePeriod>((ref) {
-  return ReportsTimelineNotifier();
-});
+final reportsTimelineProvider =
+    StateNotifierProvider<ReportsTimelineNotifier, TimelinePeriod>((ref) {
+      return ReportsTimelineNotifier();
+    });
 
 class ReportsTimelineNotifier extends StateNotifier<TimelinePeriod> {
   ReportsTimelineNotifier() : super(TimelinePeriod.thisMonth);
@@ -93,13 +110,14 @@ class ReportsTimelineNotifier extends StateNotifier<TimelinePeriod> {
   }
 }
 
-final reportsFilterProvider = StateNotifierProvider<ReportsFilterNotifier, ReportsFilterState>((ref) {
-  final timeline = ref.watch(reportsTimelineProvider);
-  final notifier = ReportsFilterNotifier();
-  // Sync the old timeline period with the new filter notifier
-  notifier.setPeriod(timeline);
-  return notifier;
-});
+final reportsFilterProvider =
+    StateNotifierProvider<ReportsFilterNotifier, ReportsFilterState>((ref) {
+      final timeline = ref.watch(reportsTimelineProvider);
+      final notifier = ReportsFilterNotifier();
+      // Sync the old timeline period with the new filter notifier
+      notifier.setPeriod(timeline);
+      return notifier;
+    });
 
 final savingsGoalRepositoryProvider = Provider<SavingsGoalRepository>((ref) {
   return SavingsGoalRepositoryImpl(AppDatabase.instance);
@@ -108,45 +126,53 @@ final savingsGoalRepositoryProvider = Provider<SavingsGoalRepository>((ref) {
 final currentMonthSavingsGoalProvider = StreamProvider<double>((ref) {
   final repo = ref.watch(savingsGoalRepositoryProvider);
   final now = DateTime.now();
-  return repo.watchSavingsGoal(now.month, now.year).map((g) => g?.amount ?? 15000.0);
+  return repo
+      .watchSavingsGoal(now.month, now.year)
+      .map((g) => g?.amount ?? 15000.0);
 });
 
-class SavingsGoalNotifier extends StateNotifier<AsyncValue<SavingsGoalEntity?>> {
+class SavingsGoalNotifier
+    extends StateNotifier<AsyncValue<SavingsGoalEntity?>> {
   final SavingsGoalRepository _repository;
   final int _month;
   final int _year;
 
-  SavingsGoalNotifier(this._repository, this._month, this._year) : super(const AsyncValue.loading()) {
+  SavingsGoalNotifier(this._repository, this._month, this._year)
+    : super(const AsyncValue.loading()) {
     _init();
   }
 
   void _init() {
-    _repository.watchSavingsGoal(_month, _year).listen((g) {
-      if (mounted) {
-        state = AsyncValue.data(g);
-      }
-    }, onError: (err, stack) {
-      if (mounted) {
-        state = AsyncValue.error(err, stack);
-      }
-    });
+    _repository
+        .watchSavingsGoal(_month, _year)
+        .listen(
+          (g) {
+            if (mounted) {
+              state = AsyncValue.data(g);
+            }
+          },
+          onError: (err, stack) {
+            if (mounted) {
+              state = AsyncValue.error(err, stack);
+            }
+          },
+        );
   }
 
   Future<void> setSavingsGoal(double amount) async {
-    final goal = SavingsGoalEntity(
-      amount: amount,
-      month: _month,
-      year: _year,
-    );
+    final goal = SavingsGoalEntity(amount: amount, month: _month, year: _year);
     await _repository.setSavingsGoal(goal);
   }
 }
 
-final savingsGoalNotifierProvider = StateNotifierProvider<SavingsGoalNotifier, AsyncValue<SavingsGoalEntity?>>((ref) {
-  final repository = ref.watch(savingsGoalRepositoryProvider);
-  final now = DateTime.now();
-  return SavingsGoalNotifier(repository, now.month, now.year);
-});
+final savingsGoalNotifierProvider =
+    StateNotifierProvider<SavingsGoalNotifier, AsyncValue<SavingsGoalEntity?>>((
+      ref,
+    ) {
+      final repository = ref.watch(savingsGoalRepositoryProvider);
+      final now = DateTime.now();
+      return SavingsGoalNotifier(repository, now.month, now.year);
+    });
 
 class TimelineTransactions {
   final List<Transaction> current;
@@ -162,19 +188,32 @@ final timelineTransactionsProvider = Provider<TimelineTransactions>((ref) {
   final start = filterState.startDate;
   final end = filterState.endDate;
 
-  final currentPeriodTxs = all.where((t) =>
-      t.date.isAfter(start.subtract(const Duration(milliseconds: 1))) &&
-      t.date.isBefore(end.add(const Duration(milliseconds: 1)))).toList();
+  final currentPeriodTxs = all
+      .where(
+        (t) =>
+            t.date.isAfter(start.subtract(const Duration(milliseconds: 1))) &&
+            t.date.isBefore(end.add(const Duration(milliseconds: 1))),
+      )
+      .toList();
 
   final duration = end.difference(start);
   final prevEnd = start.subtract(const Duration(milliseconds: 1));
   final prevStart = prevEnd.subtract(duration);
 
-  final previousPeriodTxs = all.where((t) =>
-      t.date.isAfter(prevStart.subtract(const Duration(milliseconds: 1))) &&
-      t.date.isBefore(prevEnd.add(const Duration(milliseconds: 1)))).toList();
+  final previousPeriodTxs = all
+      .where(
+        (t) =>
+            t.date.isAfter(
+              prevStart.subtract(const Duration(milliseconds: 1)),
+            ) &&
+            t.date.isBefore(prevEnd.add(const Duration(milliseconds: 1))),
+      )
+      .toList();
 
-  return TimelineTransactions(current: currentPeriodTxs, previous: previousPeriodTxs);
+  return TimelineTransactions(
+    current: currentPeriodTxs,
+    previous: previousPeriodTxs,
+  );
 });
 
 class ReportsFinancialSummary {
@@ -206,8 +245,12 @@ final reportsSummaryProvider = Provider<ReportsFinancialSummary>((ref) {
   final current = txs.current;
   final filterState = ref.watch(reportsFilterProvider);
 
-  final incomeList = current.where((t) => t.type == TransactionType.income).toList();
-  final expenseList = current.where((t) => t.type == TransactionType.expense).toList();
+  final incomeList = current
+      .where((t) => t.type == TransactionType.income)
+      .toList();
+  final expenseList = current
+      .where((t) => t.type == TransactionType.expense)
+      .toList();
 
   final income = incomeList.fold(0.0, (sum, t) => sum + t.amount);
   final expenses = expenseList.fold(0.0, (sum, t) => sum + t.amount);
@@ -216,21 +259,30 @@ final reportsSummaryProvider = Provider<ReportsFinancialSummary>((ref) {
   final savingsRate = income > 0 ? (savings / income) * 100.0 : 0.0;
   final netCashFlow = income - expenses;
 
-  final daysDiff = filterState.endDate.difference(filterState.startDate).inDays.abs() + 1;
+  final daysDiff =
+      filterState.endDate.difference(filterState.startDate).inDays.abs() + 1;
   final averageDailySpend = daysDiff > 0 ? expenses / daysDiff : 0.0;
 
-  final monthsDiff = ((filterState.endDate.year - filterState.startDate.year) * 12 +
-      filterState.endDate.month - filterState.startDate.month + 1).clamp(1, 12000);
+  final monthsDiff =
+      ((filterState.endDate.year - filterState.startDate.year) * 12 +
+              filterState.endDate.month -
+              filterState.startDate.month +
+              1)
+          .clamp(1, 12000);
   final averageMonthlySpend = expenses / monthsDiff;
 
   Transaction? largestExpense;
   if (expenseList.isNotEmpty) {
-    largestExpense = expenseList.reduce((curr, next) => curr.amount > next.amount ? curr : next);
+    largestExpense = expenseList.reduce(
+      (curr, next) => curr.amount > next.amount ? curr : next,
+    );
   }
 
   Transaction? largestIncome;
   if (incomeList.isNotEmpty) {
-    largestIncome = incomeList.reduce((curr, next) => curr.amount > next.amount ? curr : next);
+    largestIncome = incomeList.reduce(
+      (curr, next) => curr.amount > next.amount ? curr : next,
+    );
   }
 
   return ReportsFinancialSummary(
@@ -272,7 +324,9 @@ class ReportsCategoryAnalytics {
 
 final categoryAnalyticsProvider = Provider<ReportsCategoryAnalytics>((ref) {
   final txs = ref.watch(timelineTransactionsProvider);
-  final currentExpenses = txs.current.where((t) => t.type == TransactionType.expense).toList();
+  final currentExpenses = txs.current
+      .where((t) => t.type == TransactionType.expense)
+      .toList();
   final totalExpenses = currentExpenses.fold(0.0, (sum, t) => sum + t.amount);
 
   final categorySums = <String, double>{};
@@ -284,12 +338,16 @@ final categoryAnalyticsProvider = Provider<ReportsCategoryAnalytics>((ref) {
   categorySums.forEach((catId, sum) {
     final cat = AppCategories.findById(catId);
     final pct = totalExpenses > 0 ? (sum / totalExpenses) * 100.0 : 0.0;
-    details.add(CategorySpendingDetail(category: cat, amount: sum, percentage: pct));
+    details.add(
+      CategorySpendingDetail(category: cat, amount: sum, percentage: pct),
+    );
   });
 
   details.sort((a, b) => b.amount.compareTo(a.amount));
 
-  CategorySpendingDetail? topCategory = details.isNotEmpty ? details.first : null;
+  CategorySpendingDetail? topCategory = details.isNotEmpty
+      ? details.first
+      : null;
   CategorySpendingDetail? leastCategory;
   final nonZeroDetails = details.where((d) => d.amount > 0).toList();
   if (nonZeroDetails.isNotEmpty) {
@@ -319,7 +377,7 @@ class WealthScoreDetails {
 
 final wealthScoreProvider = Provider<WealthScoreDetails>((ref) {
   final summary = ref.watch(reportsSummaryProvider);
-  
+
   // 1. Savings Rate Score (40%)
   final rate = summary.savingsRate;
   double savingsRateFactor = 0.0;
@@ -331,19 +389,26 @@ final wealthScoreProvider = Provider<WealthScoreDetails>((ref) {
 
   // 2. Budget Adherence Score (40%)
   final budgetSummary = ref.watch(budgetSummaryProvider);
-  final budgetLimit = budgetSummary.totalLimit > 0 ? budgetSummary.totalLimit : 50000.0;
+  final budgetLimit = budgetSummary.totalLimit > 0
+      ? budgetSummary.totalLimit
+      : 50000.0;
   final expenses = summary.expenses;
-  
+
   double budgetAdherenceFactor = 100.0;
   if (expenses > budgetLimit) {
     final overspendPercent = (expenses - budgetLimit) / budgetLimit;
-    budgetAdherenceFactor = (100.0 - overspendPercent * 100.0).clamp(0.0, 100.0);
+    budgetAdherenceFactor = (100.0 - overspendPercent * 100.0).clamp(
+      0.0,
+      100.0,
+    );
   }
 
   // 3. Spending Consistency Score (20%)
   final txs = ref.watch(timelineTransactionsProvider);
-  final currentExpenses = txs.current.where((t) => t.type == TransactionType.expense).toList();
-  
+  final currentExpenses = txs.current
+      .where((t) => t.type == TransactionType.expense)
+      .toList();
+
   double consistencyFactor = 100.0;
   if (currentExpenses.isNotEmpty) {
     final total = currentExpenses.fold(0.0, (sum, t) => sum + t.amount);
@@ -356,12 +421,18 @@ final wealthScoreProvider = Provider<WealthScoreDetails>((ref) {
       }
       final dominantRatio = maxExpense / total;
       if (dominantRatio > 0.25) {
-        consistencyFactor = (100.0 - (dominantRatio - 0.25) * 100.0).clamp(20.0, 100.0);
+        consistencyFactor = (100.0 - (dominantRatio - 0.25) * 100.0).clamp(
+          20.0,
+          100.0,
+        );
       }
     }
   }
 
-  final overall = (savingsRateFactor * 0.40) + (budgetAdherenceFactor * 0.40) + (consistencyFactor * 0.20);
+  final overall =
+      (savingsRateFactor * 0.40) +
+      (budgetAdherenceFactor * 0.40) +
+      (consistencyFactor * 0.20);
 
   return WealthScoreDetails(
     overallScore: overall,
@@ -403,25 +474,32 @@ class SpendingTrends {
 
 final spendingTrendsProvider = Provider<SpendingTrends>((ref) {
   final txs = ref.watch(timelineTransactionsProvider);
-  
-  final curExpenses = txs.current.where((t) => t.type == TransactionType.expense).toList();
-  final prevExpenses = txs.previous.where((t) => t.type == TransactionType.expense).toList();
-  
+
+  final curExpenses = txs.current
+      .where((t) => t.type == TransactionType.expense)
+      .toList();
+  final prevExpenses = txs.previous
+      .where((t) => t.type == TransactionType.expense)
+      .toList();
+
   final curTotal = curExpenses.fold(0.0, (sum, t) => sum + t.amount);
   final prevTotal = prevExpenses.fold(0.0, (sum, t) => sum + t.amount);
-  
+
   final deltaAmount = curTotal - prevTotal;
   final isIncrease = deltaAmount > 0;
-  final totalChangePercent = prevTotal > 0 ? (deltaAmount.abs() / prevTotal) * 100.0 : 0.0;
+  final totalChangePercent = prevTotal > 0
+      ? (deltaAmount.abs() / prevTotal) * 100.0
+      : 0.0;
 
   final curCatTotals = <String, double>{};
   for (final t in curExpenses) {
     curCatTotals[t.categoryId] = (curCatTotals[t.categoryId] ?? 0.0) + t.amount;
   }
-  
+
   final prevCatTotals = <String, double>{};
   for (final t in prevExpenses) {
-    prevCatTotals[t.categoryId] = (prevCatTotals[t.categoryId] ?? 0.0) + t.amount;
+    prevCatTotals[t.categoryId] =
+        (prevCatTotals[t.categoryId] ?? 0.0) + t.amount;
   }
 
   final deltas = <CategoryDelta>[];
@@ -434,13 +512,15 @@ final spendingTrendsProvider = Provider<SpendingTrends>((ref) {
 
     final diff = curAmount - prevAmount;
     final pct = prevAmount > 0 ? (diff.abs() / prevAmount) * 100.0 : 100.0;
-    deltas.add(CategoryDelta(
-      category: cat,
-      currentAmount: curAmount,
-      previousAmount: prevAmount,
-      delta: diff,
-      percentChange: pct,
-    ));
+    deltas.add(
+      CategoryDelta(
+        category: cat,
+        currentAmount: curAmount,
+        previousAmount: prevAmount,
+        delta: diff,
+        percentChange: pct,
+      ),
+    );
   }
 
   // Sort deltas: biggest absolute change first
@@ -473,69 +553,92 @@ final smartInsightsProvider = Provider<List<SmartInsightItem>>((ref) {
   final wealth = ref.watch(wealthScoreProvider);
   final trends = ref.watch(spendingTrendsProvider);
   final budgetSummary = ref.watch(budgetSummaryProvider);
-  final budgetLimit = budgetSummary.totalLimit > 0 ? budgetSummary.totalLimit : 50000.0;
-  
+  final budgetLimit = budgetSummary.totalLimit > 0
+      ? budgetSummary.totalLimit
+      : 50000.0;
+
   final insights = <SmartInsightItem>[];
 
   // 1. Savings Rate Insight
   if (summary.savingsRate >= 30.0) {
-    insights.add(SmartInsightItem(
-      title: 'Excellent Savings Rate',
-      description: 'Your savings rate of ${summary.savingsRate.toStringAsFixed(1)}% is healthy. You are building wealth successfully.',
-      icon: Icons.check_circle_rounded,
-      color: Colors.green,
-    ));
+    insights.add(
+      SmartInsightItem(
+        title: 'Excellent Savings Rate',
+        description:
+            'Your savings rate of ${summary.savingsRate.toStringAsFixed(1)}% is healthy. You are building wealth successfully.',
+        icon: Icons.check_circle_rounded,
+        color: Colors.green,
+      ),
+    );
   } else if (summary.savingsRate > 0.0) {
-    insights.add(SmartInsightItem(
-      title: 'Boost Savings Rate',
-      description: 'Your savings rate is ${summary.savingsRate.toStringAsFixed(1)}%. Aim for 30% by reducing discretionary items to raise your Wealth Score.',
-      icon: Icons.info_rounded,
-      color: Colors.orange,
-    ));
+    insights.add(
+      SmartInsightItem(
+        title: 'Boost Savings Rate',
+        description:
+            'Your savings rate is ${summary.savingsRate.toStringAsFixed(1)}%. Aim for 30% by reducing discretionary items to raise your Wealth Score.',
+        icon: Icons.info_rounded,
+        color: Colors.orange,
+      ),
+    );
   } else {
-    insights.add(SmartInsightItem(
-      title: 'Negative Savings Rate',
-      description: 'You are spending more than you earn. Review your expenses to cut back on non-essential categories.',
-      icon: Icons.warning_rounded,
-      color: Colors.red,
-    ));
+    insights.add(
+      SmartInsightItem(
+        title: 'Negative Savings Rate',
+        description:
+            'You are spending more than you earn. Review your expenses to cut back on non-essential categories.',
+        icon: Icons.warning_rounded,
+        color: Colors.red,
+      ),
+    );
   }
 
   // 2. Budget Insight
   if (summary.expenses > budgetLimit) {
     final over = summary.expenses - budgetLimit;
-    insights.add(SmartInsightItem(
-      title: 'Budget Exceeded',
-      description: 'You exceeded your monthly budget by ₹${over.toStringAsFixed(0)}. Set category budgets to organize and limit your spending.',
-      icon: Icons.error_rounded,
-      color: Colors.red,
-    ));
+    insights.add(
+      SmartInsightItem(
+        title: 'Budget Exceeded',
+        description:
+            'You exceeded your monthly budget by ₹${over.toStringAsFixed(0)}. Set category budgets to organize and limit your spending.',
+        icon: Icons.error_rounded,
+        color: Colors.red,
+      ),
+    );
   } else {
     final left = budgetLimit - summary.expenses;
-    insights.add(SmartInsightItem(
-      title: 'Under Budget',
-      description: 'Great job! You have ₹${left.toStringAsFixed(0)} remaining of your monthly budget.',
-      icon: Icons.thumb_up_rounded,
-      color: Colors.green,
-    ));
+    insights.add(
+      SmartInsightItem(
+        title: 'Under Budget',
+        description:
+            'Great job! You have ₹${left.toStringAsFixed(0)} remaining of your monthly budget.',
+        icon: Icons.thumb_up_rounded,
+        color: Colors.green,
+      ),
+    );
   }
 
   // 3. Trend Insight
   if (trends.deltaAmount > 0.0) {
     if (trends.isIncrease) {
-      insights.add(SmartInsightItem(
-        title: 'Spending is Up',
-        description: 'You spent ₹${trends.deltaAmount.toStringAsFixed(0)} (${trends.totalChangePercent.toStringAsFixed(0)}%) more than the previous period.',
-        icon: Icons.trending_up_rounded,
-        color: Colors.red,
-      ));
+      insights.add(
+        SmartInsightItem(
+          title: 'Spending is Up',
+          description:
+              'You spent ₹${trends.deltaAmount.toStringAsFixed(0)} (${trends.totalChangePercent.toStringAsFixed(0)}%) more than the previous period.',
+          icon: Icons.trending_up_rounded,
+          color: Colors.red,
+        ),
+      );
     } else {
-      insights.add(SmartInsightItem(
-        title: 'Spending is Down',
-        description: 'Excellent! You saved ₹${trends.deltaAmount.toStringAsFixed(0)} (${trends.totalChangePercent.toStringAsFixed(0)}%) compared to the last period.',
-        icon: Icons.trending_down_rounded,
-        color: Colors.green,
-      ));
+      insights.add(
+        SmartInsightItem(
+          title: 'Spending is Down',
+          description:
+              'Excellent! You saved ₹${trends.deltaAmount.toStringAsFixed(0)} (${trends.totalChangePercent.toStringAsFixed(0)}%) compared to the last period.',
+          icon: Icons.trending_down_rounded,
+          color: Colors.green,
+        ),
+      );
     }
   }
 
@@ -544,30 +647,39 @@ final smartInsightsProvider = Provider<List<SmartInsightItem>>((ref) {
     if (d.delta.abs() > 200.0) {
       final changeDir = d.delta > 0 ? 'increased' : 'decreased';
       final changeColor = d.delta > 0 ? Colors.red : Colors.green;
-      insights.add(SmartInsightItem(
-        title: '${d.category.name} Spend Change',
-        description: 'Your spending on ${d.category.name} $changeDir by ${d.percentChange.toStringAsFixed(0)}% compared to the previous period.',
-        icon: d.category.icon,
-        color: changeColor,
-      ));
+      insights.add(
+        SmartInsightItem(
+          title: '${d.category.name} Spend Change',
+          description:
+              'Your spending on ${d.category.name} $changeDir by ${d.percentChange.toStringAsFixed(0)}% compared to the previous period.',
+          icon: d.category.icon,
+          color: changeColor,
+        ),
+      );
     }
   }
 
   // 5. Wealth Score Insight
   if (wealth.overallScore < 50) {
-    insights.add(SmartInsightItem(
-      title: 'Wealth Score Warning',
-      description: 'Your Wealth Score is ${wealth.overallScore.toStringAsFixed(0)}/100. Try setting a monthly savings goal to raise it.',
-      icon: Icons.speed_rounded,
-      color: Colors.red,
-    ));
+    insights.add(
+      SmartInsightItem(
+        title: 'Wealth Score Warning',
+        description:
+            'Your Wealth Score is ${wealth.overallScore.toStringAsFixed(0)}/100. Try setting a monthly savings goal to raise it.',
+        icon: Icons.speed_rounded,
+        color: Colors.red,
+      ),
+    );
   } else if (wealth.overallScore >= 80) {
-    insights.add(SmartInsightItem(
-      title: 'Elite Wealth Score',
-      description: 'Fantastic! Your Wealth Score is ${wealth.overallScore.toStringAsFixed(0)}/100. You exhibit top-tier financial habits.',
-      icon: Icons.workspace_premium_rounded,
-      color: Colors.amber,
-    ));
+    insights.add(
+      SmartInsightItem(
+        title: 'Elite Wealth Score',
+        description:
+            'Fantastic! Your Wealth Score is ${wealth.overallScore.toStringAsFixed(0)}/100. You exhibit top-tier financial habits.',
+        icon: Icons.workspace_premium_rounded,
+        color: Colors.amber,
+      ),
+    );
   }
 
   return insights;
@@ -608,19 +720,25 @@ final monthlyReportsHistoryProvider = Provider<List<MonthlyReportItem>>((ref) {
     final month = int.parse(parts[1]);
     final txs = entry.value;
 
-    final income = txs.where((t) => t.type == TransactionType.income).fold(0.0, (sum, t) => sum + t.amount);
-    final expenses = txs.where((t) => t.type == TransactionType.expense).fold(0.0, (sum, t) => sum + t.amount);
+    final income = txs
+        .where((t) => t.type == TransactionType.income)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final expenses = txs
+        .where((t) => t.type == TransactionType.expense)
+        .fold(0.0, (sum, t) => sum + t.amount);
     final savings = income - expenses;
     final savingsRate = income > 0 ? (savings / income) * 100.0 : 0.0;
 
-    reports.add(MonthlyReportItem(
-      month: month,
-      year: year,
-      income: income,
-      expenses: expenses,
-      savings: savings,
-      savingsRate: savingsRate,
-    ));
+    reports.add(
+      MonthlyReportItem(
+        month: month,
+        year: year,
+        income: income,
+        expenses: expenses,
+        savings: savings,
+        savingsRate: savingsRate,
+      ),
+    );
   }
 
   reports.sort((a, b) {

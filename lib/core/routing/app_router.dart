@@ -111,17 +111,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ─── Full-screen modal routes (outside tab shell) ──────────────────
       GoRoute(
         path: AppConstants.routeBudget,
-        pageBuilder: (context, state) => const MaterialPage(
-          fullscreenDialog: true,
-          child: BudgetScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            const MaterialPage(fullscreenDialog: true, child: BudgetScreen()),
       ),
       GoRoute(
         path: AppConstants.routeReports,
-        pageBuilder: (context, state) => const MaterialPage(
-          fullscreenDialog: true,
-          child: ReportsScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            const MaterialPage(fullscreenDialog: true, child: ReportsScreen()),
       ),
       GoRoute(
         path: AppConstants.routeNotifications,
@@ -132,10 +128,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppConstants.routeSmsInbox,
-        pageBuilder: (context, state) => const MaterialPage(
-          fullscreenDialog: true,
-          child: SmsInboxScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            const MaterialPage(fullscreenDialog: true, child: SmsInboxScreen()),
       ),
     ],
   );

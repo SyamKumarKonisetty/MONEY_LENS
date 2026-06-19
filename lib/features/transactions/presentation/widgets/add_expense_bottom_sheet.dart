@@ -8,18 +8,34 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../expenses/presentation/providers/expense_provider.dart';
 import '../../domain/models.dart';
 import '../providers/transactions_provider.dart';
+import '../../../sms_detection/presentation/providers/sms_detection_provider.dart';
 
 // ─── Public entry-point ───────────────────────────────────────────────────────
 
 /// Shows the premium Add Transaction sheet.
 /// Call this instead of instantiating the widget directly.
-void showAddTransactionSheet(BuildContext context) {
+void showAddTransactionSheet(
+  BuildContext context, {
+  TransactionType? initialType,
+  double? initialAmount,
+  String? initialTitle,
+  String? initialCategory,
+  String? smsIdToApprove,
+  DateTime? initialDate,
+}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     useSafeArea: false,
-    builder: (_) => const AddExpenseBottomSheet(),
+    builder: (_) => AddExpenseBottomSheet(
+      initialType: initialType,
+      initialAmount: initialAmount,
+      initialTitle: initialTitle,
+      initialCategory: initialCategory,
+      smsIdToApprove: smsIdToApprove,
+      initialDate: initialDate,
+    ),
   );
 }
 
@@ -34,7 +50,22 @@ void showAddTransactionSheet(BuildContext context) {
 /// - Live transaction preview card
 /// - Mandatory category selection
 class AddExpenseBottomSheet extends ConsumerStatefulWidget {
-  const AddExpenseBottomSheet({super.key});
+  final TransactionType? initialType;
+  final double? initialAmount;
+  final String? initialTitle;
+  final String? initialCategory;
+  final String? smsIdToApprove;
+  final DateTime? initialDate;
+
+  const AddExpenseBottomSheet({
+    super.key,
+    this.initialType,
+    this.initialAmount,
+    this.initialTitle,
+    this.initialCategory,
+    this.smsIdToApprove,
+    this.initialDate,
+  });
 
   @override
   ConsumerState<AddExpenseBottomSheet> createState() =>
@@ -87,6 +118,32 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
       duration: const Duration(milliseconds: 250),
     );
     _currentQuote = _getRandomQuote();
+
+    if (widget.initialType != null) {
+      _type = widget.initialType!;
+    }
+    if (widget.initialAmount != null && widget.initialAmount! > 0) {
+      final amt = widget.initialAmount!;
+      if (amt == amt.toInt()) {
+        _amountInput = amt.toInt().toString();
+      } else {
+        _amountInput = amt.toStringAsFixed(2);
+        if (_amountInput.endsWith('.00')) {
+          _amountInput = amt.toInt().toString();
+        }
+      }
+    }
+    if (widget.initialTitle != null) {
+      _titleController.text = widget.initialTitle!;
+    }
+    if (widget.initialCategory != null) {
+      final availableCats = _categories;
+      final match = availableCats.firstWhere(
+        (c) => c.name.toLowerCase() == widget.initialCategory!.toLowerCase(),
+        orElse: () => availableCats.first,
+      );
+      _selectedCategory = match;
+    }
   }
 
   @override
@@ -141,19 +198,15 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
     return buffer.toString();
   }
 
-  List<Category> get _categories =>
-      _type == TransactionType.expense
-          ? AppCategories.expense
-          : AppCategories.income;
+  List<Category> get _categories => _type == TransactionType.expense
+      ? AppCategories.expense
+      : AppCategories.income;
 
-  Color get _typeColor =>
-      _type == TransactionType.expense
-          ? const Color(0xFFFF3B30)
-          : const Color(0xFF34C759);
+  Color get _typeColor => _type == TransactionType.expense
+      ? const Color(0xFFFF3B30)
+      : const Color(0xFF34C759);
 
-  bool get _isValid =>
-      _amount > 0 &&
-      _selectedCategory != null;
+  bool get _isValid => _amount > 0 && _selectedCategory != null;
 
   // ─── Numpad ───────────────────────────────────────────────────────────────
 
@@ -222,7 +275,14 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
           category: _selectedCategory!.name,
           notes: notes.isEmpty ? null : notes,
           transactionType: _type.name,
+          createdAt: widget.initialDate,
         );
+
+    if (widget.smsIdToApprove != null) {
+      await ref
+          .read(smsDetectionNotifierProvider.notifier)
+          .markProcessed(widget.smsIdToApprove!);
+    }
 
     if (mounted) Navigator.of(context).pop();
   }
@@ -242,7 +302,8 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
       top: false,
       child: Focus(
         focusNode: _dummyFocus,
-        autofocus: true, // Auto-focuses this dummy node so keyboard doesn't pop up
+        autofocus:
+            true, // Auto-focuses this dummy node so keyboard doesn't pop up
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: screenHeight * 0.95),
           child: Container(
@@ -291,7 +352,6 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
       ),
     );
   }
-
 
   // ─── Handle ───────────────────────────────────────────────────────────────
 
@@ -396,7 +456,6 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
     );
   }
 
-
   // ─── Amount Display ───────────────────────────────────────────────────────
 
   Widget _buildAmountDisplay() {
@@ -405,7 +464,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.pagePadding,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -490,7 +551,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
         child: Opacity(
           opacity: isZero ? 0.4 : 1.0,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.pagePadding,
+            ),
             child: TextField(
               controller: _titleController,
               focusNode: _titleFocus,
@@ -519,7 +582,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                 ),
                 prefixIcon: Icon(
                   isZero ? Icons.lock_outline_rounded : Icons.edit_rounded,
-                  color: context.textSecondaryColor.withValues(alpha: isZero ? 0.4 : 0.8),
+                  color: context.textSecondaryColor.withValues(
+                    alpha: isZero ? 0.4 : 0.8,
+                  ),
                   size: 18,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -544,7 +609,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
         child: Opacity(
           opacity: isZero ? 0.4 : 1.0,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.pagePadding,
+            ),
             child: TextField(
               controller: _notesController,
               focusNode: _notesFocus,
@@ -573,7 +640,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                 ),
                 prefixIcon: Icon(
                   isZero ? Icons.lock_outline_rounded : Icons.notes_rounded,
-                  color: context.textSecondaryColor.withValues(alpha: isZero ? 0.4 : 0.8),
+                  color: context.textSecondaryColor.withValues(
+                    alpha: isZero ? 0.4 : 0.8,
+                  ),
                   size: 18,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -630,9 +699,10 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
               Expanded(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return FadeTransition(opacity: animation, child: child);
-                  },
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
                   child: Text(
                     _currentQuote,
                     key: ValueKey<String>(_currentQuote),
@@ -659,7 +729,11 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.info_outline_rounded, color: Colors.amberAccent, size: 20),
+            const Icon(
+              Icons.info_outline_rounded,
+              color: Colors.amberAccent,
+              size: 20,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -672,11 +746,7 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
         backgroundColor: const Color(0xFF2C2C2E),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.only(
-          bottom: 16,
-          left: 16,
-          right: 16,
-        ),
+        margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
@@ -687,7 +757,6 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
       ),
     );
   }
-
 
   // ─── Category Grid ────────────────────────────────────────────────────────
 
@@ -714,7 +783,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
               // Recently Used strip
               if (recentlyUsedFiltered.isNotEmpty) ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.pagePadding,
+                  ),
                   child: Text(
                     'RECENTLY USED',
                     style: AppTypography.labelSmall.copyWith(
@@ -729,10 +800,13 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                   height: 40,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pagePadding,
+                    ),
                     physics: const BouncingScrollPhysics(),
                     itemCount: recentlyUsedFiltered.length,
-                    separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: AppSpacing.sm),
                     itemBuilder: (context, i) {
                       final cat = recentlyUsedFiltered[i];
                       final isSelected = _selectedCategory?.id == cat.id;
@@ -753,7 +827,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                                 color: isSelected
                                     ? Colors.white
                                     : context.textPrimaryColor,
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
                               ),
                             ),
                           ],
@@ -783,7 +859,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
               ],
 
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pagePadding,
+                ),
                 child: Row(
                   children: [
                     Text(
@@ -792,7 +870,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                           : 'All Categories',
                       style: AppTypography.labelSmall.copyWith(
                         color: _selectedCategory == null
-                            ? (isZero ? context.textSecondaryColor : context.errorColor.withValues(alpha: 0.8))
+                            ? (isZero
+                                  ? context.textSecondaryColor
+                                  : context.errorColor.withValues(alpha: 0.8))
                             : context.textSecondaryColor,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.5,
@@ -806,7 +886,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: _selectedCategory!.color.withValues(alpha: 0.12),
+                          color: _selectedCategory!.color.withValues(
+                            alpha: 0.12,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -831,7 +913,8 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                   ),
                   physics: const BouncingScrollPhysics(),
                   itemCount: cats.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: AppSpacing.sm),
                   itemBuilder: (context, i) {
                     final cat = cats[i];
                     final isSelected = _selectedCategory?.id == cat.id;
@@ -853,7 +936,6 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
     );
   }
 
-
   // ─── Preview Card ─────────────────────────────────────────────────────────
 
   Widget _buildPreviewCard() {
@@ -873,9 +955,7 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
           decoration: BoxDecoration(
             color: _typeColor.withValues(alpha: 0.07),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: _typeColor.withValues(alpha: 0.2),
-            ),
+            border: Border.all(color: _typeColor.withValues(alpha: 0.2)),
           ),
           child: Row(
             children: [
@@ -890,9 +970,7 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  hasCat
-                      ? _selectedCategory!.icon
-                      : Icons.category_outlined,
+                  hasCat ? _selectedCategory!.icon : Icons.category_outlined,
                   color: hasCat
                       ? _selectedCategory!.color
                       : context.textSecondaryColor.withValues(alpha: 0.4),
@@ -905,9 +983,13 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      hasTitle 
-                          ? _titleController.text.trim() 
-                          : (hasCat ? _selectedCategory!.name : (_type == TransactionType.expense ? 'Transaction' : 'Income')),
+                      hasTitle
+                          ? _titleController.text.trim()
+                          : (hasCat
+                                ? _selectedCategory!.name
+                                : (_type == TransactionType.expense
+                                      ? 'Transaction'
+                                      : 'Income')),
                       style: AppTypography.titleMedium.copyWith(
                         color: (hasTitle || hasCat)
                             ? context.textPrimaryColor
@@ -932,7 +1014,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                     ? '${_type == TransactionType.expense ? '-' : '+'}₹$_amountDisplay'
                     : '₹0.00',
                 style: AppTypography.titleMedium.copyWith(
-                  color: hasAmount ? _typeColor : context.textSecondaryColor.withValues(alpha: 0.3),
+                  color: hasAmount
+                      ? _typeColor
+                      : context.textSecondaryColor.withValues(alpha: 0.3),
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -971,9 +1055,7 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
   }
 
   Widget _numRow(List<String> digits, double keyH) {
-    return Row(
-      children: digits.map((d) => _numKey(d, keyH)).toList(),
-    );
+    return Row(children: digits.map((d) => _numKey(d, keyH)).toList());
   }
 
   Widget _numKey(String digit, double keyH) {
@@ -1038,8 +1120,8 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                       _isValid
                           ? 'Save ${_type == TransactionType.expense ? 'Expense' : 'Income'}'
                           : _amount == 0
-                              ? 'Enter an amount'
-                              : 'Select a category',
+                          ? 'Enter an amount'
+                          : 'Select a category',
                       style: AppTypography.titleMedium.copyWith(
                         color: _isValid
                             ? Colors.white
@@ -1053,7 +1135,6 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
       ),
     );
   }
-
 }
 
 // ─── Category Chip ────────────────────────────────────────────────────────────
@@ -1083,9 +1164,7 @@ class _CategoryChip extends StatelessWidget {
               : context.surfaceVariantColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? category.color
-                : Colors.transparent,
+            color: isSelected ? category.color : Colors.transparent,
             width: 2,
           ),
         ),
@@ -1102,11 +1181,7 @@ class _CategoryChip extends StatelessWidget {
                     : category.color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                category.icon,
-                color: category.color,
-                size: 18,
-              ),
+              child: Icon(category.icon, color: category.color, size: 18),
             ),
             const SizedBox(height: 5),
             Text(
@@ -1115,9 +1190,7 @@ class _CategoryChip extends StatelessWidget {
                 fontFamily: AppTypography.fontFamily,
                 fontSize: 9.5,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected
-                    ? category.color
-                    : context.textSecondaryColor,
+                color: isSelected ? category.color : context.textSecondaryColor,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
@@ -1189,9 +1262,7 @@ class _NumpadKeyState extends State<_NumpadKey>
         child: Container(
           height: widget.keyHeight,
           margin: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(14)),
           child: Center(
             child: widget.label != null
                 ? Text(
@@ -1203,11 +1274,7 @@ class _NumpadKeyState extends State<_NumpadKey>
                       color: widget.textColor,
                     ),
                   )
-                : Icon(
-                    widget.icon,
-                    color: widget.textColor,
-                    size: 22,
-                  ),
+                : Icon(widget.icon, color: widget.textColor, size: 22),
           ),
         ),
       ),

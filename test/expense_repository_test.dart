@@ -48,36 +48,39 @@ void main() {
       expect(listAfter.any((e) => e.id == insertedId), isFalse);
     });
 
-    test('ExpenseNotifier seeds, deletes, and updates state reactively', () async {
-      SharedPreferences.setMockInitialValues({'db_seeded': true});
-      final notifier = ExpenseNotifier(repository);
-      
-      // Wait for initialization and stream listener
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      
-      // Verify initial state is empty because db_seeded is true and database is empty
-      expect(notifier.state.expenses, isEmpty);
-      
-      // Add an expense through notifier
-      await notifier.addExpense(
-        title: 'Snacks',
-        amount: 15.0,
-        category: 'Food',
-      );
-      
-      // Wait for stream to emit and notifier to process
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      
-      expect(notifier.state.expenses.length, 1);
-      final expenseId = notifier.state.expenses.first.id!;
-      
-      // Delete the expense
-      await notifier.deleteExpense(expenseId);
-      
-      // Wait for stream to emit and notifier to process
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      
-      expect(notifier.state.expenses, isEmpty);
-    });
+    test(
+      'ExpenseNotifier seeds, deletes, and updates state reactively',
+      () async {
+        SharedPreferences.setMockInitialValues({'db_seeded': true});
+        final notifier = ExpenseNotifier(repository);
+
+        // Wait for initialization and stream listener
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        // Verify initial state is empty because db_seeded is true and database is empty
+        expect(notifier.state.expenses, isEmpty);
+
+        // Add an expense through notifier
+        await notifier.addExpense(
+          title: 'Snacks',
+          amount: 15.0,
+          category: 'Food',
+        );
+
+        // Wait for stream to emit and notifier to process
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        expect(notifier.state.expenses.length, 1);
+        final expenseId = notifier.state.expenses.first.id!;
+
+        // Delete the expense
+        await notifier.deleteExpense(expenseId);
+
+        // Wait for stream to emit and notifier to process
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        expect(notifier.state.expenses, isEmpty);
+      },
+    );
   });
 }

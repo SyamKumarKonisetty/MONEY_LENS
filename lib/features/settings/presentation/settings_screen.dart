@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -111,10 +112,14 @@ class SettingsScreen extends ConsumerWidget {
                         trailing: Switch(
                           value: settings.enabled,
                           onChanged: (val) {
-                            ref.read(notificationSettingsProvider.notifier).setEnabled(val);
+                            ref
+                                .read(notificationSettingsProvider.notifier)
+                                .setEnabled(val);
                           },
                           activeThumbColor: context.primaryColor,
-                          activeTrackColor: context.primaryColor.withValues(alpha: 0.5),
+                          activeTrackColor: context.primaryColor.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                       SettingsTile(
@@ -137,16 +142,22 @@ class SettingsScreen extends ConsumerWidget {
                         subtitle: 'Read transaction SMS locally',
                         iconColor: const Color(0xFF34C759),
                         trailing: Switch(
-                          value: smsPrivacy.detectionEnabled && smsPrivacy.permissionGranted,
+                          value:
+                              smsPrivacy.detectionEnabled &&
+                              smsPrivacy.permissionGranted,
                           onChanged: (val) {
                             if (!smsPrivacy.permissionGranted && val) {
                               context.push(AppConstants.routeSmsInbox);
                             } else {
-                              ref.read(smsPrivacySettingsProvider.notifier).setDetectionEnabled(val);
+                              ref
+                                  .read(smsPrivacySettingsProvider.notifier)
+                                  .setDetectionEnabled(val);
                             }
                           },
                           activeThumbColor: context.primaryColor,
-                          activeTrackColor: context.primaryColor.withValues(alpha: 0.5),
+                          activeTrackColor: context.primaryColor.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                       SettingsTile(
@@ -154,7 +165,8 @@ class SettingsScreen extends ConsumerWidget {
                         title: 'Notification History',
                         subtitle: 'Review streaks & unlocked badges',
                         iconColor: const Color(0xFFFF375F),
-                        onTap: () => context.push(AppConstants.routeNotifications),
+                        onTap: () =>
+                            context.push(AppConstants.routeNotifications),
                       ),
                       SettingsTile(
                         icon: Icons.mark_email_read_rounded,
@@ -211,7 +223,9 @@ class SettingsScreen extends ConsumerWidget {
                         await BackupHelper.shareBackupFile();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Backup file shared successfully')),
+                            const SnackBar(
+                              content: Text('Backup file shared successfully'),
+                            ),
                           );
                         }
                       } catch (e) {
@@ -267,7 +281,8 @@ class SettingsScreen extends ConsumerWidget {
                                   ),
                                   hintText: 'Paste JSON here...',
                                   hintStyle: TextStyle(
-                                    color: context.textSecondaryColor.withValues(alpha: 0.5),
+                                    color: context.textSecondaryColor
+                                        .withValues(alpha: 0.5),
                                   ),
                                 ),
                               ),
@@ -275,7 +290,8 @@ class SettingsScreen extends ConsumerWidget {
                           ),
                           actions: [
                             TextButton(
-                              onPressed: () => Navigator.of(dialogContext).pop(),
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(),
                               child: Text(
                                 'Cancel',
                                 style: AppTypography.labelLarge.copyWith(
@@ -289,21 +305,29 @@ class SettingsScreen extends ConsumerWidget {
                                 if (jsonText.isEmpty) return;
                                 try {
                                   await BackupHelper.deserializeData(jsonText);
-                                  
+
                                   // Invalidate providers to refresh UI instantly
                                   ref.invalidate(expenseNotifierProvider);
                                   ref.invalidate(budgetNotifierProvider);
-                                  
+
                                   if (context.mounted) {
                                     Navigator.of(dialogContext).pop();
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Data imported successfully')),
+                                      const SnackBar(
+                                        content: Text(
+                                          'Data imported successfully',
+                                        ),
+                                      ),
                                     );
                                   }
                                 } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Failed to import: Invalid JSON format')),
+                                      SnackBar(
+                                        content: Text(
+                                          'Failed to import: Invalid JSON format',
+                                        ),
+                                      ),
                                     );
                                   }
                                 }
@@ -347,7 +371,8 @@ class SettingsScreen extends ConsumerWidget {
                           ),
                           actions: [
                             TextButton(
-                              onPressed: () => Navigator.of(dialogContext).pop(),
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(),
                               child: Text(
                                 'Cancel',
                                 style: AppTypography.labelLarge.copyWith(
@@ -358,7 +383,9 @@ class SettingsScreen extends ConsumerWidget {
                             TextButton(
                               onPressed: () async {
                                 Navigator.of(dialogContext).pop();
-                                await ref.read(authNotifierProvider.notifier).clearAllAppData();
+                                await ref
+                                    .read(authNotifierProvider.notifier)
+                                    .clearAllAppData();
                               },
                               child: Text(
                                 'Clear All',
@@ -450,6 +477,8 @@ class _ProfileCard extends ConsumerWidget {
                 style: AppTypography.bodyLarge.copyWith(
                   color: context.textPrimaryColor,
                 ),
+                maxLength: 25,
+                inputFormatters: [LengthLimitingTextInputFormatter(25)],
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: context.surfaceVariantColor,

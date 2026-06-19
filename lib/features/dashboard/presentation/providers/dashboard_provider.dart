@@ -13,10 +13,12 @@ final currentMonthExpensesProvider = Provider<double>((ref) {
   final all = ref.watch(allTransactionsProvider);
   final now = DateTime.now();
   return all
-      .where((t) =>
-          t.date.year == now.year &&
-          t.date.month == now.month &&
-          t.type == TransactionType.expense)
+      .where(
+        (t) =>
+            t.date.year == now.year &&
+            t.date.month == now.month &&
+            t.type == TransactionType.expense,
+      )
       .fold(0.0, (sum, t) => sum + t.amount);
 });
 
@@ -25,10 +27,12 @@ final currentMonthIncomeProvider = Provider<double>((ref) {
   final all = ref.watch(allTransactionsProvider);
   final now = DateTime.now();
   return all
-      .where((t) =>
-          t.date.year == now.year &&
-          t.date.month == now.month &&
-          t.type == TransactionType.income)
+      .where(
+        (t) =>
+            t.date.year == now.year &&
+            t.date.month == now.month &&
+            t.type == TransactionType.income,
+      )
       .fold(0.0, (sum, t) => sum + t.amount);
 });
 
@@ -75,11 +79,13 @@ final spentTodayProvider = Provider<double>((ref) {
   final all = ref.watch(allTransactionsProvider);
   final now = DateTime.now();
   return all
-      .where((t) =>
-          t.date.year == now.year &&
-          t.date.month == now.month &&
-          t.date.day == now.day &&
-          t.type == TransactionType.expense)
+      .where(
+        (t) =>
+            t.date.year == now.year &&
+            t.date.month == now.month &&
+            t.date.day == now.day &&
+            t.type == TransactionType.expense,
+      )
       .fold(0.0, (sum, t) => sum + t.amount);
 });
 
@@ -88,10 +94,12 @@ final transactionsCountTodayProvider = Provider<int>((ref) {
   final all = ref.watch(allTransactionsProvider);
   final now = DateTime.now();
   return all
-      .where((t) =>
-          t.date.year == now.year &&
-          t.date.month == now.month &&
-          t.date.day == now.day)
+      .where(
+        (t) =>
+            t.date.year == now.year &&
+            t.date.month == now.month &&
+            t.date.day == now.day,
+      )
       .length;
 });
 
@@ -100,11 +108,13 @@ final topCategoryTodayProvider = Provider<String>((ref) {
   final all = ref.watch(allTransactionsProvider);
   final now = DateTime.now();
   final todayExpenses = all
-      .where((t) =>
-          t.date.year == now.year &&
-          t.date.month == now.month &&
-          t.date.day == now.day &&
-          t.type == TransactionType.expense)
+      .where(
+        (t) =>
+            t.date.year == now.year &&
+            t.date.month == now.month &&
+            t.date.day == now.day &&
+            t.type == TransactionType.expense,
+      )
       .toList();
   if (todayExpenses.isEmpty) return 'None';
 

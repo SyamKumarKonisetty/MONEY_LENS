@@ -9,35 +9,41 @@ class BackupHelper {
   /// Serialize all database data to a JSON String.
   static Future<String> serializeData() async {
     final db = AppDatabase.instance;
-    
+
     // 1. Query expenses/transactions
     final expensesList = await db.select(db.expenses).get();
-    final expensesJson = expensesList.map((e) => {
-      'title': e.title,
-      'amount': e.amount,
-      'category': e.category,
-      'notes': e.notes,
-      'createdAt': e.createdAt.toIso8601String(),
-      'updatedAt': e.updatedAt.toIso8601String(),
-      'transactionType': e.transactionType,
-    }).toList();
+    final expensesJson = expensesList
+        .map(
+          (e) => {
+            'title': e.title,
+            'amount': e.amount,
+            'category': e.category,
+            'notes': e.notes,
+            'createdAt': e.createdAt.toIso8601String(),
+            'updatedAt': e.updatedAt.toIso8601String(),
+            'transactionType': e.transactionType,
+          },
+        )
+        .toList();
 
     // 2. Query budgets
     final budgetsList = await db.select(db.budgets).get();
-    final budgetsJson = budgetsList.map((b) => {
-      'category': b.category,
-      'monthlyLimit': b.monthlyLimit,
-      'createdAt': b.createdAt.toIso8601String(),
-      'updatedAt': b.updatedAt.toIso8601String(),
-    }).toList();
+    final budgetsJson = budgetsList
+        .map(
+          (b) => {
+            'category': b.category,
+            'monthlyLimit': b.monthlyLimit,
+            'createdAt': b.createdAt.toIso8601String(),
+            'updatedAt': b.updatedAt.toIso8601String(),
+          },
+        )
+        .toList();
 
     // 3. Query savings goals
     final savingsList = await db.select(db.savingsGoals).get();
-    final savingsJson = savingsList.map((s) => {
-      'amount': s.amount,
-      'month': s.month,
-      'year': s.year,
-    }).toList();
+    final savingsJson = savingsList
+        .map((s) => {'amount': s.amount, 'month': s.month, 'year': s.year})
+        .toList();
 
     final data = {
       'version': 1,
@@ -72,7 +78,9 @@ class BackupHelper {
             updatedAt: item['updatedAt'] != null
                 ? DateTime.parse(item['updatedAt'] as String)
                 : DateTime.now(),
-            transactionType: Value(item['transactionType'] as String? ?? 'expense'),
+            transactionType: Value(
+              item['transactionType'] as String? ?? 'expense',
+            ),
           );
           await db.into(db.expenses).insert(row);
         }

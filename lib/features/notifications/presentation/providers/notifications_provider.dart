@@ -125,10 +125,12 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
 }
 
 final notificationSettingsProvider =
-    StateNotifierProvider<NotificationSettingsNotifier, NotificationSettings>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return NotificationSettingsNotifier(prefs);
-});
+    StateNotifierProvider<NotificationSettingsNotifier, NotificationSettings>((
+      ref,
+    ) {
+      final prefs = ref.watch(sharedPreferencesProvider);
+      return NotificationSettingsNotifier(prefs);
+    });
 
 // ─── Notification History List ──────────────────────────────────────────────
 
@@ -147,8 +149,14 @@ class NotificationsListNotifier extends StateNotifier<List<NotificationItem>> {
     if (jsonStr != null) {
       try {
         final list = jsonDecode(jsonStr) as List;
-        state = list.map((item) => NotificationItem.fromJson(item as Map<String, dynamic>)).toList()
-          ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        state =
+            list
+                .map(
+                  (item) =>
+                      NotificationItem.fromJson(item as Map<String, dynamic>),
+                )
+                .toList()
+              ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
       } catch (_) {
         state = [];
       }
@@ -189,7 +197,9 @@ class NotificationsListNotifier extends StateNotifier<List<NotificationItem>> {
   }
 
   Future<void> markAsRead(String id) async {
-    state = state.map((item) => item.id == id ? item.copyWith(isRead: true) : item).toList();
+    state = state
+        .map((item) => item.id == id ? item.copyWith(isRead: true) : item)
+        .toList();
     await _saveNotifications();
   }
 
@@ -210,10 +220,12 @@ class NotificationsListNotifier extends StateNotifier<List<NotificationItem>> {
 }
 
 final notificationsListProvider =
-    StateNotifierProvider<NotificationsListNotifier, List<NotificationItem>>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return NotificationsListNotifier(prefs, ref);
-});
+    StateNotifierProvider<NotificationsListNotifier, List<NotificationItem>>((
+      ref,
+    ) {
+      final prefs = ref.watch(sharedPreferencesProvider);
+      return NotificationsListNotifier(prefs, ref);
+    });
 
 // ─── In-App Push Notification Banner Overlay ────────────────────────────────
 
@@ -231,8 +243,8 @@ class InAppBannerNotifier extends StateNotifier<NotificationItem?> {
 
 final inAppBannerProvider =
     StateNotifierProvider<InAppBannerNotifier, NotificationItem?>((ref) {
-  return InAppBannerNotifier();
-});
+      return InAppBannerNotifier();
+    });
 
 // ─── Streak & Achievements Engine ───────────────────────────────────────────
 
@@ -253,10 +265,7 @@ class Achievement {
     this.unlockedAt,
   });
 
-  Achievement copyWith({
-    bool? isUnlocked,
-    DateTime? unlockedAt,
-  }) {
+  Achievement copyWith({bool? isUnlocked, DateTime? unlockedAt}) {
     return Achievement(
       id: id,
       title: title,
@@ -297,11 +306,13 @@ class StreakNotifier extends StateNotifier<StreakState> {
   final Ref _ref;
 
   StreakNotifier(this._prefs, this._ref)
-      : super(StreakState(
+    : super(
+        StreakState(
           transactionStreak: 0,
           loginStreak: 0,
           achievements: _defaultAchievements(),
-        )) {
+        ),
+      ) {
     _initStreaks();
   }
 
@@ -360,10 +371,13 @@ class StreakNotifier extends StateNotifier<StreakState> {
       try {
         lastLogin = DateTime.parse(_normalizeDate(lastLoginStr));
       } catch (e) {
-        debugPrint('Invalid date: $lastLoginStr');
         lastLogin = DateTime.now();
       }
-      final lastLoginDay = DateTime(lastLogin.year, lastLogin.month, lastLogin.day);
+      final lastLoginDay = DateTime(
+        lastLogin.year,
+        lastLogin.month,
+        lastLogin.day,
+      );
       final currentDay = DateTime(today.year, today.month, today.day);
       final diff = currentDay.difference(lastLoginDay).inDays;
 
@@ -410,7 +424,9 @@ class StreakNotifier extends StateNotifier<StreakState> {
       var unlock = false;
       switch (ach.id) {
         case 'first_expense':
-          unlock = transactions.where((t) => t.type == TransactionType.expense).isNotEmpty;
+          unlock = transactions
+              .where((t) => t.type == TransactionType.expense)
+              .isNotEmpty;
           break;
         case 'tx_100':
           unlock = transactions.length >= 100;
@@ -419,7 +435,9 @@ class StreakNotifier extends StateNotifier<StreakState> {
           unlock = txStreak >= 30 || state.loginStreak >= 30;
           break;
         case 'budget_master':
-          unlock = budgets.length >= 3 && budgets.every((b) => b.spentAmount <= b.monthlyLimit);
+          unlock =
+              budgets.length >= 3 &&
+              budgets.every((b) => b.spentAmount <= b.monthlyLimit);
           break;
         case 'savings_champion':
           unlock = summary.savingsRate >= 30.0;
@@ -427,14 +445,20 @@ class StreakNotifier extends StateNotifier<StreakState> {
       }
 
       if (unlock) {
-        updatedAchievements[i] = ach.copyWith(isUnlocked: true, unlockedAt: DateTime.now());
+        updatedAchievements[i] = ach.copyWith(
+          isUnlocked: true,
+          unlockedAt: DateTime.now(),
+        );
         newlyUnlockedIds.add(ach.id);
 
         // Notify user about Achievement Unlock!
         Future.delayed(const Duration(milliseconds: 500), () {
-          _ref.read(notificationsListProvider.notifier).addNotification(
+          _ref
+              .read(notificationsListProvider.notifier)
+              .addNotification(
                 title: '🏆 Achievement Unlocked!',
-                body: 'Congratulations! You unlocked the "${ach.title}" badge: ${ach.description}.',
+                body:
+                    'Congratulations! You unlocked the "${ach.title}" badge: ${ach.description}.',
                 type: 'achievement',
                 metadata: {'badgeId': ach.id},
               );
@@ -457,15 +481,20 @@ class StreakNotifier extends StateNotifier<StreakState> {
   int _calculateTransactionStreak(List<Transaction> transactions) {
     if (transactions.isEmpty) return 0;
 
-    final dates = transactions
-        .map((t) => DateTime(t.date.year, t.date.month, t.date.day))
-        .toSet()
-        .toList()
-      ..sort((a, b) => b.compareTo(a));
+    final dates =
+        transactions
+            .map((t) => DateTime(t.date.year, t.date.month, t.date.day))
+            .toSet()
+            .toList()
+          ..sort((a, b) => b.compareTo(a));
 
     if (dates.isEmpty) return 0;
 
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     final yesterday = today.subtract(const Duration(days: 1));
 
     if (dates.first != today && dates.first != yesterday) {
@@ -491,9 +520,9 @@ class StreakNotifier extends StateNotifier<StreakState> {
 
 final streakNotifierProvider =
     StateNotifierProvider<StreakNotifier, StreakState>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return StreakNotifier(prefs, ref);
-});
+      final prefs = ref.watch(sharedPreferencesProvider);
+      return StreakNotifier(prefs, ref);
+    });
 
 // ─── Scheduled Notification & Reminder Simulator ─────────────────────────────
 
@@ -505,24 +534,35 @@ class ScheduledNotificationSimulator {
   void triggerDailySummary() {
     final transactions = _ref.read(allTransactionsProvider);
     final today = DateTime.now();
-    final todayTxs = transactions.where((t) =>
-        t.date.year == today.year &&
-        t.date.month == today.month &&
-        t.date.day == today.day).toList();
+    final todayTxs = transactions
+        .where(
+          (t) =>
+              t.date.year == today.year &&
+              t.date.month == today.month &&
+              t.date.day == today.day,
+        )
+        .toList();
 
-    final spent = todayTxs.where((t) => t.type == TransactionType.expense).fold(0.0, (sum, t) => sum + t.amount);
-    final income = todayTxs.where((t) => t.type == TransactionType.income).fold(0.0, (sum, t) => sum + t.amount);
+    final spent = todayTxs
+        .where((t) => t.type == TransactionType.expense)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final income = todayTxs
+        .where((t) => t.type == TransactionType.income)
+        .fold(0.0, (sum, t) => sum + t.amount);
     final net = income - spent;
 
     // Get Top Category
     var topCat = 'None';
     if (todayTxs.isNotEmpty) {
       final categories = <String, double>{};
-      for (final t in todayTxs.where((t) => t.type == TransactionType.expense)) {
+      for (final t in todayTxs.where(
+        (t) => t.type == TransactionType.expense,
+      )) {
         categories[t.categoryId] = (categories[t.categoryId] ?? 0.0) + t.amount;
       }
       if (categories.isNotEmpty) {
-        final sorted = categories.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+        final sorted = categories.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
         topCat = sorted.first.key;
         // capitalize
         topCat = topCat[0].toUpperCase() + topCat.substring(1);
@@ -530,9 +570,11 @@ class ScheduledNotificationSimulator {
     }
 
     final count = todayTxs.length;
-    _ref.read(notificationsListProvider.notifier).addNotification(
+    _ref
+        .read(notificationsListProvider.notifier)
+        .addNotification(
           title: '🌅 Daily Spending Summary',
-          body: spent > 0 
+          body: spent > 0
               ? 'You spent ₹${spent.toStringAsFixed(0)} today across $count transactions. Top category was $topCat.'
               : 'Zero spending recorded today! Great job staying under budget.',
           type: 'summary',
@@ -548,15 +590,22 @@ class ScheduledNotificationSimulator {
   void triggerNoEntryReminder() {
     final transactions = _ref.read(allTransactionsProvider);
     final today = DateTime.now();
-    final todayTxs = transactions.where((t) =>
-        t.date.year == today.year &&
-        t.date.month == today.month &&
-        t.date.day == today.day).toList();
+    final todayTxs = transactions
+        .where(
+          (t) =>
+              t.date.year == today.year &&
+              t.date.month == today.month &&
+              t.date.day == today.day,
+        )
+        .toList();
 
     if (todayTxs.isEmpty) {
-      _ref.read(notificationsListProvider.notifier).addNotification(
+      _ref
+          .read(notificationsListProvider.notifier)
+          .addNotification(
             title: '🤔 Did you spend money today?',
-            body: 'You haven\'t logged any transactions today. Tap to add an expense.',
+            body:
+                'You haven\'t logged any transactions today. Tap to add an expense.',
             type: 'reminder',
           );
     }
@@ -565,27 +614,39 @@ class ScheduledNotificationSimulator {
   void checkBudgetWarnings() {
     final budgets = _ref.read(liveBudgetsProvider);
     for (final b in budgets) {
-      final utilization = b.monthlyLimit > 0 ? (b.spentAmount / b.monthlyLimit) : 0.0;
-      final categoryName = b.category[0].toUpperCase() + b.category.substring(1);
+      final utilization = b.monthlyLimit > 0
+          ? (b.spentAmount / b.monthlyLimit)
+          : 0.0;
+      final categoryName =
+          b.category[0].toUpperCase() + b.category.substring(1);
 
       if (utilization >= 1.0) {
-        _ref.read(notificationsListProvider.notifier).addNotification(
+        _ref
+            .read(notificationsListProvider.notifier)
+            .addNotification(
               title: '🚨 Budget Exceeded!',
-              body: 'Your $categoryName monthly budget of ₹${b.monthlyLimit.toStringAsFixed(0)} has been exceeded!',
+              body:
+                  'Your $categoryName monthly budget of ₹${b.monthlyLimit.toStringAsFixed(0)} has been exceeded!',
               type: 'budget',
               metadata: {'category': b.category},
             );
       } else if (utilization >= 0.90) {
-        _ref.read(notificationsListProvider.notifier).addNotification(
+        _ref
+            .read(notificationsListProvider.notifier)
+            .addNotification(
               title: '⚠️ Budget Warning (90%)',
-              body: 'Your $categoryName budget is 90% exhausted. (Spent ₹${b.spentAmount.toStringAsFixed(0)} of ₹${b.monthlyLimit.toStringAsFixed(0)}).',
+              body:
+                  'Your $categoryName budget is 90% exhausted. (Spent ₹${b.spentAmount.toStringAsFixed(0)} of ₹${b.monthlyLimit.toStringAsFixed(0)}).',
               type: 'budget',
               metadata: {'category': b.category},
             );
       } else if (utilization >= 0.80) {
-        _ref.read(notificationsListProvider.notifier).addNotification(
+        _ref
+            .read(notificationsListProvider.notifier)
+            .addNotification(
               title: '⚠️ Budget Warning (80%)',
-              body: 'Your $categoryName budget is 80% exhausted. (Spent ₹${b.spentAmount.toStringAsFixed(0)} of ₹${b.monthlyLimit.toStringAsFixed(0)}).',
+              body:
+                  'Your $categoryName budget is 80% exhausted. (Spent ₹${b.spentAmount.toStringAsFixed(0)} of ₹${b.monthlyLimit.toStringAsFixed(0)}).',
               type: 'budget',
               metadata: {'category': b.category},
             );
@@ -598,9 +659,15 @@ class ScheduledNotificationSimulator {
     final now = DateTime.now();
     final oneWeekAgo = now.subtract(const Duration(days: 7));
 
-    final weekTxs = transactions.where((t) => t.date.isAfter(oneWeekAgo)).toList();
-    final spent = weekTxs.where((t) => t.type == TransactionType.expense).fold(0.0, (sum, t) => sum + t.amount);
-    final income = weekTxs.where((t) => t.type == TransactionType.income).fold(0.0, (sum, t) => sum + t.amount);
+    final weekTxs = transactions
+        .where((t) => t.date.isAfter(oneWeekAgo))
+        .toList();
+    final spent = weekTxs
+        .where((t) => t.type == TransactionType.expense)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final income = weekTxs
+        .where((t) => t.type == TransactionType.income)
+        .fold(0.0, (sum, t) => sum + t.amount);
     final savings = income - spent;
 
     var topCat = 'None';
@@ -610,15 +677,19 @@ class ScheduledNotificationSimulator {
         categories[t.categoryId] = (categories[t.categoryId] ?? 0.0) + t.amount;
       }
       if (categories.isNotEmpty) {
-        final sorted = categories.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+        final sorted = categories.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
         topCat = sorted.first.key;
         topCat = topCat[0].toUpperCase() + topCat.substring(1);
       }
     }
 
-    _ref.read(notificationsListProvider.notifier).addNotification(
+    _ref
+        .read(notificationsListProvider.notifier)
+        .addNotification(
           title: '📊 Weekly Financial Report',
-          body: 'This week: Income: ₹${income.toStringAsFixed(0)} | Spent: ₹${spent.toStringAsFixed(0)} | Savings: ₹${savings.toStringAsFixed(0)}. Top category: $topCat.',
+          body:
+              'This week: Income: ₹${income.toStringAsFixed(0)} | Spent: ₹${spent.toStringAsFixed(0)} | Savings: ₹${savings.toStringAsFixed(0)}. Top category: $topCat.',
           type: 'weekly',
           metadata: {
             'spent': spent.toString(),
@@ -634,15 +705,27 @@ class ScheduledNotificationSimulator {
     final now = DateTime.now();
     final startOfMonth = DateTime(now.year, now.month, 1);
 
-    final monthTxs = transactions.where((t) => t.date.isAfter(startOfMonth.subtract(const Duration(milliseconds: 1)))).toList();
-    final spent = monthTxs.where((t) => t.type == TransactionType.expense).fold(0.0, (sum, t) => sum + t.amount);
-    final income = monthTxs.where((t) => t.type == TransactionType.income).fold(0.0, (sum, t) => sum + t.amount);
+    final monthTxs = transactions
+        .where(
+          (t) => t.date.isAfter(
+            startOfMonth.subtract(const Duration(milliseconds: 1)),
+          ),
+        )
+        .toList();
+    final spent = monthTxs
+        .where((t) => t.type == TransactionType.expense)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final income = monthTxs
+        .where((t) => t.type == TransactionType.income)
+        .fold(0.0, (sum, t) => sum + t.amount);
     final savings = income - spent;
     final savingsRate = income > 0 ? (savings / income) * 100.0 : 0.0;
 
     // Largest Expense
     Transaction? largestExp;
-    final expensesList = monthTxs.where((t) => t.type == TransactionType.expense).toList();
+    final expensesList = monthTxs
+        .where((t) => t.type == TransactionType.expense)
+        .toList();
     if (expensesList.isNotEmpty) {
       expensesList.sort((a, b) => b.amount.compareTo(a.amount));
       largestExp = expensesList.first;
@@ -651,11 +734,14 @@ class ScheduledNotificationSimulator {
     var topCat = 'None';
     if (monthTxs.isNotEmpty) {
       final categories = <String, int>{};
-      for (final t in monthTxs.where((t) => t.type == TransactionType.expense)) {
+      for (final t in monthTxs.where(
+        (t) => t.type == TransactionType.expense,
+      )) {
         categories[t.categoryId] = (categories[t.categoryId] ?? 0) + 1;
       }
       if (categories.isNotEmpty) {
-        final sorted = categories.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+        final sorted = categories.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
         topCat = sorted.first.key;
         topCat = topCat[0].toUpperCase() + topCat.substring(1);
       }
@@ -664,24 +750,34 @@ class ScheduledNotificationSimulator {
     // Financial Score simulation
     final budgetAdherence = 80.0; // simulated
     final consistency = 75.0; // simulated
-    final financialScore = (savingsRate.clamp(0.0, 100.0) * 0.4) + (budgetAdherence * 0.4) + (consistency * 0.2);
+    final financialScore =
+        (savingsRate.clamp(0.0, 100.0) * 0.4) +
+        (budgetAdherence * 0.4) +
+        (consistency * 0.2);
 
-    _ref.read(notificationsListProvider.notifier).addNotification(
+    _ref
+        .read(notificationsListProvider.notifier)
+        .addNotification(
           title: '🗓️ Month-End Financial Summary',
-          body: 'Financial Score: ${financialScore.toStringAsFixed(0)}/100. Income: ₹${income.toStringAsFixed(0)} | Spent: ₹${spent.toStringAsFixed(0)} | Savings: ₹${savings.toStringAsFixed(0)}. Top category: $topCat.',
+          body:
+              'Financial Score: ${financialScore.toStringAsFixed(0)}/100. Income: ₹${income.toStringAsFixed(0)} | Spent: ₹${spent.toStringAsFixed(0)} | Savings: ₹${savings.toStringAsFixed(0)}. Top category: $topCat.',
           type: 'monthly',
           metadata: {
             'spent': spent.toString(),
             'income': income.toString(),
             'savings': savings.toString(),
             'score': financialScore.toStringAsFixed(0),
-            'largestExpense': largestExp != null ? '${largestExp.title} (₹${largestExp.amount.toStringAsFixed(0)})' : 'None',
+            'largestExpense': largestExp != null
+                ? '${largestExp.title} (₹${largestExp.amount.toStringAsFixed(0)})'
+                : 'None',
             'topCategory': topCat,
           },
         );
   }
 }
 
-final notificationSimulatorProvider = Provider<ScheduledNotificationSimulator>((ref) {
+final notificationSimulatorProvider = Provider<ScheduledNotificationSimulator>((
+  ref,
+) {
   return ScheduledNotificationSimulator(ref);
 });

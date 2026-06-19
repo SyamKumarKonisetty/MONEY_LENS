@@ -53,10 +53,7 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
       duration: const Duration(milliseconds: 2200),
     )..repeat(reverse: true);
 
-    _pulseAnim = CurvedAnimation(
-      parent: _pulseCtrl,
-      curve: Curves.easeInOut,
-    );
+    _pulseAnim = CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut);
   }
 
   @override

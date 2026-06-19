@@ -22,19 +22,26 @@ final allBudgetsProvider = StreamProvider<List<BudgetEntity>>((ref) {
 final liveBudgetsProvider = Provider<List<BudgetEntity>>((ref) {
   final budgetsAsync = ref.watch(allBudgetsProvider);
   final transactions = ref.watch(allTransactionsProvider);
-  
+
   final budgets = budgetsAsync.value ?? [];
   final now = DateTime.now();
-  final currentMonthExpenses = transactions.where((t) =>
-      t.date.year == now.year &&
-      t.date.month == now.month &&
-      t.type == TransactionType.expense).toList();
-      
+  final currentMonthExpenses = transactions
+      .where(
+        (t) =>
+            t.date.year == now.year &&
+            t.date.month == now.month &&
+            t.type == TransactionType.expense,
+      )
+      .toList();
+
   return budgets.map((budget) {
-    final categoryExpenses = currentMonthExpenses.where((t) =>
-        t.categoryId.toLowerCase() == budget.category.toLowerCase()).toList();
+    final categoryExpenses = currentMonthExpenses
+        .where(
+          (t) => t.categoryId.toLowerCase() == budget.category.toLowerCase(),
+        )
+        .toList();
     final spent = categoryExpenses.fold(0.0, (sum, t) => sum + t.amount);
-    
+
     return budget.copyWith(
       spentAmount: spent,
       remainingAmount: budget.monthlyLimit - spent,
@@ -50,15 +57,18 @@ class BudgetNotifier extends StateNotifier<AsyncValue<List<BudgetEntity>>> {
   }
 
   void _init() {
-    _repository.watchAllBudgets().listen((budgets) {
-      if (mounted) {
-        state = AsyncValue.data(budgets);
-      }
-    }, onError: (err, stack) {
-      if (mounted) {
-        state = AsyncValue.error(err, stack);
-      }
-    });
+    _repository.watchAllBudgets().listen(
+      (budgets) {
+        if (mounted) {
+          state = AsyncValue.data(budgets);
+        }
+      },
+      onError: (err, stack) {
+        if (mounted) {
+          state = AsyncValue.error(err, stack);
+        }
+      },
+    );
   }
 
   Future<void> setBudget(String category, double limit) async {
@@ -80,10 +90,13 @@ class BudgetNotifier extends StateNotifier<AsyncValue<List<BudgetEntity>>> {
   }
 }
 
-final budgetNotifierProvider = StateNotifierProvider<BudgetNotifier, AsyncValue<List<BudgetEntity>>>((ref) {
-  final repository = ref.watch(budgetRepositoryProvider);
-  return BudgetNotifier(repository);
-});
+final budgetNotifierProvider =
+    StateNotifierProvider<BudgetNotifier, AsyncValue<List<BudgetEntity>>>((
+      ref,
+    ) {
+      final repository = ref.watch(budgetRepositoryProvider);
+      return BudgetNotifier(repository);
+    });
 
 class BudgetSummary {
   final double totalLimit;
@@ -227,16 +240,16 @@ final monthEndProjectionProvider = Provider<MonthEndProjection>((ref) {
   final spent = ref.watch(currentMonthExpensesProvider);
   final budgetAsync = ref.watch(currentMonthBudgetProvider);
   final budgetLimit = budgetAsync.value ?? 50000.0;
-  
+
   final now = DateTime.now();
   final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
   final totalDays = lastDayOfMonth.day;
   final daysPassed = now.day;
-  
+
   final dailyAverage = daysPassed > 0 ? (spent / daysPassed) : 0.0;
   final expectedSpend = dailyAverage * totalDays;
   final expectedSavings = budgetLimit - expectedSpend;
-  
+
   return MonthEndProjection(
     expectedSpend: expectedSpend,
     expectedSavings: expectedSavings,
@@ -267,30 +280,35 @@ class SpendingInsight {
 final spendingInsightsProvider = Provider<List<SpendingInsight>>((ref) {
   final all = ref.watch(allTransactionsProvider);
   final now = DateTime.now();
-  
+
   final currentMonth = now.month;
   final currentYear = now.year;
-  
+
   final prevMonthDate = DateTime(now.year, now.month - 1, 1);
   final prevMonth = prevMonthDate.month;
   final prevYear = prevMonthDate.year;
 
   final currentMonthTxs = all
-      .where((t) =>
-          t.date.year == currentYear &&
-          t.date.month == currentMonth &&
-          t.type == TransactionType.expense)
+      .where(
+        (t) =>
+            t.date.year == currentYear &&
+            t.date.month == currentMonth &&
+            t.type == TransactionType.expense,
+      )
       .toList();
   final prevMonthTxs = all
-      .where((t) =>
-          t.date.year == prevYear &&
-          t.date.month == prevMonth &&
-          t.type == TransactionType.expense)
+      .where(
+        (t) =>
+            t.date.year == prevYear &&
+            t.date.month == prevMonth &&
+            t.type == TransactionType.expense,
+      )
       .toList();
 
   final currentTotals = <String, double>{};
   for (final t in currentMonthTxs) {
-    currentTotals[t.categoryId] = (currentTotals[t.categoryId] ?? 0.0) + t.amount;
+    currentTotals[t.categoryId] =
+        (currentTotals[t.categoryId] ?? 0.0) + t.amount;
   }
 
   final prevTotals = <String, double>{};
@@ -311,28 +329,32 @@ final spendingInsightsProvider = Provider<List<SpendingInsight>>((ref) {
       final change = ((curAmount - prevAmount) / prevAmount) * 100;
       if (change.abs() >= 5.0) {
         final isIncrease = change > 0;
-        insights.add(SpendingInsight(
+        insights.add(
+          SpendingInsight(
+            categoryId: cat.id,
+            categoryName: cat.name,
+            icon: cat.icon,
+            color: cat.color,
+            percentageChange: change.abs(),
+            isIncrease: isIncrease,
+            text: isIncrease
+                ? '${cat.name} spending increased ${change.toStringAsFixed(0)}% compared to last month.'
+                : '${cat.name} spending decreased ${change.abs().toStringAsFixed(0)}% compared to last month.',
+          ),
+        );
+      }
+    } else if (curAmount > 0) {
+      insights.add(
+        SpendingInsight(
           categoryId: cat.id,
           categoryName: cat.name,
           icon: cat.icon,
           color: cat.color,
-          percentageChange: change.abs(),
-          isIncrease: isIncrease,
-          text: isIncrease 
-              ? '${cat.name} spending increased ${change.toStringAsFixed(0)}% compared to last month.'
-              : '${cat.name} spending decreased ${change.abs().toStringAsFixed(0)}% compared to last month.',
-        ));
-      }
-    } else if (curAmount > 0) {
-      insights.add(SpendingInsight(
-        categoryId: cat.id,
-        categoryName: cat.name,
-        icon: cat.icon,
-        color: cat.color,
-        percentageChange: 100.0,
-        isIncrease: true,
-        text: 'New spending recorded in ${cat.name} this month.',
-      ));
+          percentageChange: 100.0,
+          isIncrease: true,
+          text: 'New spending recorded in ${cat.name} this month.',
+        ),
+      );
     }
   }
 
