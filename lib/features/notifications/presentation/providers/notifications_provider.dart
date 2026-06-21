@@ -9,6 +9,7 @@ import '../../../transactions/domain/models.dart';
 import '../../../budget/presentation/providers/budget_provider.dart';
 import '../../../reports/presentation/providers/reports_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../../core/services/notifications/notification_manager.dart';
 
 String _normalizeDate(String input) {
   final parts = input.split('-');
@@ -20,37 +21,66 @@ String _normalizeDate(String input) {
 // ─── Notification Settings ──────────────────────────────────────────────────
 
 class NotificationSettings {
-  final bool enabled;
+  final bool masterEnabled;
+
+  final bool dailyEnabled;
   final TimeOfDay dailyTime;
-  final String weeklyDayAndTime; // e.g. "Sunday 10:00"
-  final String monthlyDayAndTime; // e.g. "Last Day 10:00"
-  final String reminderFrequency; // "Daily", "Weekly", "Monthly", "Never"
-  final TimeOfDay reminderTime;
+
+  final bool budgetWarningEnabled;
+
+  final bool weeklySummaryEnabled;
+  final int weeklyDay; // 1 = Monday, 7 = Sunday
+  final TimeOfDay weeklyTime;
+
+  final bool monthlyReportEnabled;
+  final int monthlyDay; // 31 means last day of month
+  final TimeOfDay monthlyTime;
+
+  final bool goalAchievementEnabled;
+  final bool inactiveReminderEnabled;
 
   NotificationSettings({
-    this.enabled = true,
-    this.dailyTime = const TimeOfDay(hour: 20, minute: 0),
-    this.weeklyDayAndTime = 'Sunday 10:00',
-    this.monthlyDayAndTime = 'Last Day 10:00',
-    this.reminderFrequency = 'Daily',
-    this.reminderTime = const TimeOfDay(hour: 20, minute: 0),
+    this.masterEnabled = true,
+    this.dailyEnabled = true,
+    this.dailyTime = const TimeOfDay(hour: 20, minute: 30),
+    this.budgetWarningEnabled = true,
+    this.weeklySummaryEnabled = true,
+    this.weeklyDay = 7, // Sunday
+    this.weeklyTime = const TimeOfDay(hour: 20, minute: 0),
+    this.monthlyReportEnabled = true,
+    this.monthlyDay = 31,
+    this.monthlyTime = const TimeOfDay(hour: 21, minute: 0),
+    this.goalAchievementEnabled = true,
+    this.inactiveReminderEnabled = true,
   });
 
   NotificationSettings copyWith({
-    bool? enabled,
+    bool? masterEnabled,
+    bool? dailyEnabled,
     TimeOfDay? dailyTime,
-    String? weeklyDayAndTime,
-    String? monthlyDayAndTime,
-    String? reminderFrequency,
-    TimeOfDay? reminderTime,
+    bool? budgetWarningEnabled,
+    bool? weeklySummaryEnabled,
+    int? weeklyDay,
+    TimeOfDay? weeklyTime,
+    bool? monthlyReportEnabled,
+    int? monthlyDay,
+    TimeOfDay? monthlyTime,
+    bool? goalAchievementEnabled,
+    bool? inactiveReminderEnabled,
   }) {
     return NotificationSettings(
-      enabled: enabled ?? this.enabled,
+      masterEnabled: masterEnabled ?? this.masterEnabled,
+      dailyEnabled: dailyEnabled ?? this.dailyEnabled,
       dailyTime: dailyTime ?? this.dailyTime,
-      weeklyDayAndTime: weeklyDayAndTime ?? this.weeklyDayAndTime,
-      monthlyDayAndTime: monthlyDayAndTime ?? this.monthlyDayAndTime,
-      reminderFrequency: reminderFrequency ?? this.reminderFrequency,
-      reminderTime: reminderTime ?? this.reminderTime,
+      budgetWarningEnabled: budgetWarningEnabled ?? this.budgetWarningEnabled,
+      weeklySummaryEnabled: weeklySummaryEnabled ?? this.weeklySummaryEnabled,
+      weeklyDay: weeklyDay ?? this.weeklyDay,
+      weeklyTime: weeklyTime ?? this.weeklyTime,
+      monthlyReportEnabled: monthlyReportEnabled ?? this.monthlyReportEnabled,
+      monthlyDay: monthlyDay ?? this.monthlyDay,
+      monthlyTime: monthlyTime ?? this.monthlyTime,
+      goalAchievementEnabled: goalAchievementEnabled ?? this.goalAchievementEnabled,
+      inactiveReminderEnabled: inactiveReminderEnabled ?? this.inactiveReminderEnabled,
     );
   }
 }
@@ -62,65 +92,88 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
     _loadSettings();
   }
 
-  static const String _keyEnabled = 'notif_enabled';
-  static const String _keyDailyHour = 'notif_daily_hour';
-  static const String _keyDailyMinute = 'notif_daily_minute';
-  static const String _keyWeekly = 'notif_weekly';
-  static const String _keyMonthly = 'notif_monthly';
-  static const String _keyReminderFrequency = 'notif_reminder_freq';
-  static const String _keyReminderHour = 'notif_reminder_hour';
-  static const String _keyReminderMinute = 'notif_reminder_minute';
-
   void _loadSettings() {
-    final enabled = _prefs.getBool(_keyEnabled) ?? true;
-    final hour = _prefs.getInt(_keyDailyHour) ?? 20;
-    final minute = _prefs.getInt(_keyDailyMinute) ?? 0;
-    final weekly = _prefs.getString(_keyWeekly) ?? 'Sunday 10:00';
-    final monthly = _prefs.getString(_keyMonthly) ?? 'Last Day 10:00';
-    final freq = _prefs.getString(_keyReminderFrequency) ?? 'Daily';
-    final remHour = _prefs.getInt(_keyReminderHour) ?? 20;
-    final remMin = _prefs.getInt(_keyReminderMinute) ?? 0;
-
     state = NotificationSettings(
-      enabled: enabled,
-      dailyTime: TimeOfDay(hour: hour, minute: minute),
-      weeklyDayAndTime: weekly,
-      monthlyDayAndTime: monthly,
-      reminderFrequency: freq,
-      reminderTime: TimeOfDay(hour: remHour, minute: remMin),
+      masterEnabled: _prefs.getBool('notif_master') ?? true,
+      dailyEnabled: _prefs.getBool('notif_daily') ?? true,
+      dailyTime: TimeOfDay(
+        hour: _prefs.getInt('notif_daily_h') ?? 20,
+        minute: _prefs.getInt('notif_daily_m') ?? 30,
+      ),
+      budgetWarningEnabled: _prefs.getBool('notif_budget') ?? true,
+      weeklySummaryEnabled: _prefs.getBool('notif_weekly') ?? true,
+      weeklyDay: _prefs.getInt('notif_weekly_d') ?? 7,
+      weeklyTime: TimeOfDay(
+        hour: _prefs.getInt('notif_weekly_h') ?? 20,
+        minute: _prefs.getInt('notif_weekly_m') ?? 0,
+      ),
+      monthlyReportEnabled: _prefs.getBool('notif_monthly') ?? true,
+      monthlyDay: _prefs.getInt('notif_monthly_d') ?? 31,
+      monthlyTime: TimeOfDay(
+        hour: _prefs.getInt('notif_monthly_h') ?? 21,
+        minute: _prefs.getInt('notif_monthly_m') ?? 0,
+      ),
+      goalAchievementEnabled: _prefs.getBool('notif_goal') ?? true,
+      inactiveReminderEnabled: _prefs.getBool('notif_inactive') ?? true,
     );
   }
 
-  Future<void> setEnabled(bool val) async {
-    await _prefs.setBool(_keyEnabled, val);
-    state = state.copyWith(enabled: val);
-  }
+  Future<void> updateSettings(NotificationSettings newSettings) async {
+    await _prefs.setBool('notif_master', newSettings.masterEnabled);
+    await _prefs.setBool('notif_daily', newSettings.dailyEnabled);
+    await _prefs.setInt('notif_daily_h', newSettings.dailyTime.hour);
+    await _prefs.setInt('notif_daily_m', newSettings.dailyTime.minute);
+    
+    await _prefs.setBool('notif_budget', newSettings.budgetWarningEnabled);
+    
+    await _prefs.setBool('notif_weekly', newSettings.weeklySummaryEnabled);
+    await _prefs.setInt('notif_weekly_d', newSettings.weeklyDay);
+    await _prefs.setInt('notif_weekly_h', newSettings.weeklyTime.hour);
+    await _prefs.setInt('notif_weekly_m', newSettings.weeklyTime.minute);
+    
+    await _prefs.setBool('notif_monthly', newSettings.monthlyReportEnabled);
+    await _prefs.setInt('notif_monthly_d', newSettings.monthlyDay);
+    await _prefs.setInt('notif_monthly_h', newSettings.monthlyTime.hour);
+    await _prefs.setInt('notif_monthly_m', newSettings.monthlyTime.minute);
+    
+    await _prefs.setBool('notif_goal', newSettings.goalAchievementEnabled);
+    await _prefs.setBool('notif_inactive', newSettings.inactiveReminderEnabled);
 
-  Future<void> setDailyTime(TimeOfDay time) async {
-    await _prefs.setInt(_keyDailyHour, time.hour);
-    await _prefs.setInt(_keyDailyMinute, time.minute);
-    state = state.copyWith(dailyTime: time);
-  }
+    state = newSettings;
 
-  Future<void> setWeeklyTime(String val) async {
-    await _prefs.setString(_keyWeekly, val);
-    state = state.copyWith(weeklyDayAndTime: val);
-  }
-
-  Future<void> setMonthlyTime(String val) async {
-    await _prefs.setString(_keyMonthly, val);
-    state = state.copyWith(monthlyDayAndTime: val);
-  }
-
-  Future<void> setReminderFrequency(String val) async {
-    await _prefs.setString(_keyReminderFrequency, val);
-    state = state.copyWith(reminderFrequency: val);
-  }
-
-  Future<void> setReminderTime(TimeOfDay time) async {
-    await _prefs.setInt(_keyReminderHour, time.hour);
-    await _prefs.setInt(_keyReminderMinute, time.minute);
-    state = state.copyWith(reminderTime: time);
+    // Sync notification schedules with NotificationManager
+    final manager = NotificationManager();
+    if (!newSettings.masterEnabled) {
+      await manager.cancelAll();
+    } else {
+      // Daily Reminder
+      if (newSettings.dailyEnabled) {
+        await manager.scheduleDailyReminder(newSettings.dailyTime);
+      } else {
+        await manager.cancelNotification(NotificationManager.idDailyReminder);
+      }
+      
+      // Weekly Summary
+      if (newSettings.weeklySummaryEnabled) {
+        await manager.scheduleWeeklySummary(newSettings.weeklyDay, newSettings.weeklyTime);
+      } else {
+        await manager.cancelNotification(NotificationManager.idWeeklySummary);
+      }
+      
+      // Monthly Report
+      if (newSettings.monthlyReportEnabled) {
+        await manager.scheduleMonthlyReport(newSettings.monthlyDay, newSettings.monthlyTime);
+      } else {
+        await manager.cancelNotification(NotificationManager.idMonthlyReport);
+      }
+      
+      // Inactive Reminder
+      if (newSettings.inactiveReminderEnabled) {
+        await manager.scheduleInactiveReminder(3); // 3 days
+      } else {
+        await manager.cancelNotification(NotificationManager.idInactiveReminder);
+      }
+    }
   }
 }
 
@@ -177,7 +230,7 @@ class NotificationsListNotifier extends StateNotifier<List<NotificationItem>> {
     Map<String, String>? metadata,
   }) async {
     final settings = _ref.read(notificationSettingsProvider);
-    if (!settings.enabled) return;
+    if (!settings.masterEnabled) return;
 
     final newItem = NotificationItem(
       id: DateTime.now().millisecondsSinceEpoch.toString(),

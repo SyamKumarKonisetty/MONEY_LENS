@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/design/colors/app_colors.dart';
 
 /// Transaction type — income or expense.
 enum TransactionType {
@@ -92,129 +93,129 @@ class Category {
 class AppCategories {
   AppCategories._();
 
-  static const Category food = Category(
+  static final Category food = Category(
     id: 'food',
     name: 'Food',
     icon: Icons.restaurant_rounded,
-    color: Color(0xFFFF9500),
+    color: AppColors.categoryPalette[0],
   );
 
-  static const Category groceries = Category(
+  static final Category groceries = Category(
     id: 'groceries',
     name: 'Groceries',
     icon: Icons.shopping_cart_rounded,
-    color: Color(0xFF34C759),
+    color: AppColors.incomeGreen,
   );
 
-  static const Category transport = Category(
+  static final Category transport = Category(
     id: 'transport',
     name: 'Transport',
     icon: Icons.directions_car_rounded,
-    color: Color(0xFF007AFF),
+    color: AppColors.sapphireBlue,
   );
 
-  static const Category fuel = Category(
+  static final Category fuel = Category(
     id: 'fuel',
     name: 'Fuel',
     icon: Icons.local_gas_station_rounded,
-    color: Color(0xFFE0A900),
+    color: AppColors.warningAmber,
   );
 
-  static const Category shopping = Category(
+  static final Category shopping = Category(
     id: 'shopping',
     name: 'Shopping',
     icon: Icons.shopping_bag_rounded,
-    color: Color(0xFFAF52DE),
+    color: AppColors.categoryPalette[4],
   );
 
-  static const Category entertainment = Category(
+  static final Category entertainment = Category(
     id: 'entertainment',
     name: 'Entertainment',
     icon: Icons.movie_rounded,
-    color: Color(0xFFFF2D55),
+    color: AppColors.expenseCoral,
   );
 
-  static const Category bills = Category(
+  static final Category bills = Category(
     id: 'bills',
     name: 'Bills',
     icon: Icons.receipt_long_rounded,
-    color: Color(0xFF32ADE6),
+    color: AppColors.cyanHighlight,
   );
 
-  static const Category medical = Category(
+  static final Category medical = Category(
     id: 'medical',
     name: 'Medical',
     icon: Icons.medical_services_rounded,
-    color: Color(0xFFFF3B30),
+    color: AppColors.expenseCoral,
   );
 
-  static const Category travel = Category(
+  static final Category travel = Category(
     id: 'travel',
     name: 'Travel',
     icon: Icons.flight_rounded,
-    color: Color(0xFF5856D6),
+    color: AppColors.sapphireBlue,
   );
 
-  static const Category education = Category(
+  static final Category education = Category(
     id: 'education',
     name: 'Education',
     icon: Icons.school_rounded,
-    color: Color(0xFF5AC8FA),
+    color: AppColors.cyanHighlight,
   );
 
-  static const Category other = Category(
+  static final Category other = Category(
     id: 'other',
     name: 'Other',
     icon: Icons.category_rounded,
-    color: Color(0xFF8E8E93),
+    color: AppColors.textSecondary,
   );
 
   // ─── Income categories ────────────────────────────────────────────────────
 
-  static const Category salary = Category(
+  static final Category salary = Category(
     id: 'salary',
     name: 'Salary',
     icon: Icons.payments_rounded,
-    color: Color(0xFF34C759),
+    color: AppColors.incomeGreen,
   );
 
-  static const Category freelance = Category(
+  static final Category freelance = Category(
     id: 'freelance',
     name: 'Freelance',
     icon: Icons.laptop_rounded,
-    color: Color(0xFF007AFF),
+    color: AppColors.sapphireBlue,
   );
 
-  static const Category investment = Category(
+  static final Category investment = Category(
     id: 'investment',
     name: 'Investment',
     icon: Icons.trending_up_rounded,
-    color: Color(0xFF5AC8FA),
+    color: AppColors.cyanHighlight,
   );
 
-  static const Category rental = Category(
+  static final Category rental = Category(
     id: 'rental',
     name: 'Rental',
     icon: Icons.home_work_rounded,
-    color: Color(0xFFAF52DE),
+    color: AppColors.categoryPalette[4],
   );
 
-  static const Category gift = Category(
+  static final Category gift = Category(
     id: 'gift',
     name: 'Gift',
     icon: Icons.card_giftcard_rounded,
-    color: Color(0xFFFF2D55),
+    color: AppColors.expenseCoral,
   );
 
-  static const Category otherIncome = Category(
+  static final Category otherIncome = Category(
     id: 'other_income',
     name: 'Other',
     icon: Icons.add_circle_rounded,
-    color: Color(0xFF8E8E93),
+    color: AppColors.textSecondary,
   );
 
   /// All expense categories.
-  static const List<Category> all = [
+  static final List<Category> all = [
     food,
     groceries,
     transport,
@@ -229,10 +230,10 @@ class AppCategories {
   ];
 
   /// Expense-only categories.
-  static const List<Category> expense = all;
+  static final List<Category> expense = all;
 
   /// Income categories.
-  static const List<Category> income = [
+  static final List<Category> income = [
     salary,
     freelance,
     investment,

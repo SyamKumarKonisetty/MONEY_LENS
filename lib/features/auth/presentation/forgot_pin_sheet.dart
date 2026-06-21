@@ -5,6 +5,8 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/extensions/context_extensions.dart';
+import '../../../design_system/components/buttons.dart';
+import '../../../design_system/components/inputs.dart';
 import '../providers/auth_provider.dart';
 
 class ForgotPinSheet extends ConsumerStatefulWidget {
@@ -175,292 +177,151 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 5,
-              decoration: BoxDecoration(
-                color: context.separatorColor,
-                borderRadius: AppRadius.circularFull,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            'Recover PIN',
-            style: AppTypography.titleLarge.copyWith(
-              color: context.textPrimaryColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Choose a verification method to reset your passcode.',
-            style: AppTypography.bodySmall.copyWith(
-              color: context.textSecondaryColor,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-
-          if (_errorMessage != null) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: context.errorColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                _errorMessage!,
-                style: TextStyle(
-                  color: context.errorColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: context.separatorColor,
+                  borderRadius: AppRadius.circularFull,
                 ),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-          ],
-
-          if (_selectedOption == 0) ...[
-            // Option 1 Selector
-            ListTile(
-              leading: Icon(Icons.pin_rounded, color: context.primaryColor),
-              title: Text(
-                'Option 1: Verify Current PIN',
-                style: AppTypography.bodyLarge.copyWith(
-                  color: context.textPrimaryColor,
-                ),
+            Text(
+              'Recover PIN',
+              style: AppTypography.titleLarge.copyWith(
+                color: context.textPrimaryColor,
+                fontWeight: FontWeight.bold,
               ),
-              subtitle: Text(
-                'Enter your active PIN to change it',
-                style: AppTypography.bodySmall.copyWith(
-                  color: context.textSecondaryColor,
-                ),
-              ),
-              trailing: Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: context.textSecondaryColor,
-              ),
-              onTap: () {
-                setState(() {
-                  _selectedOption = 1;
-                  _errorMessage = null;
-                });
-              },
             ),
-            const Divider(),
-            // Option 2 Selector
-            ListTile(
-              leading: Icon(
-                Icons.security_rounded,
-                color: context.primaryColor,
-              ),
-              title: Text(
-                'Option 2: Verify Recovery Answer',
-                style: AppTypography.bodyLarge.copyWith(
-                  color: context.textPrimaryColor,
-                ),
-              ),
-              subtitle: Text(
-                'Answer security question to reset PIN',
-                style: AppTypography.bodySmall.copyWith(
-                  color: context.textSecondaryColor,
-                ),
-              ),
-              trailing: Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Choose a verification method to reset your passcode.',
+              style: AppTypography.bodySmall.copyWith(
                 color: context.textSecondaryColor,
               ),
-              onTap: () {
-                setState(() {
-                  _selectedOption = 2;
-                  _errorMessage = null;
-                });
-              },
             ),
             const SizedBox(height: AppSpacing.xl),
-          ] else if (_selectedOption == 1) ...[
-            // Back Button
-            TextButton.icon(
-              onPressed: () => setState(() => _selectedOption = 0),
-              icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 14,
-                color: context.primaryColor,
-              ),
-              label: Text(
-                'Back to options',
-                style: TextStyle(color: context.primaryColor),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Form(
-              key: _formKey1,
-              child: Column(
-                children: [
-                  _buildPinField(
-                    controller: _currentPinController,
-                    labelText: 'Current PIN',
-                    hintText: 'Enter active 4-digit PIN',
+
+            if (_errorMessage != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: context.errorColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _errorMessage!,
+                  style: TextStyle(
+                    color: context.errorColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  _buildPinField(
-                    controller: _newPinController1,
-                    labelText: 'New PIN',
-                    hintText: 'Enter new 4-digit PIN',
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  _buildPinField(
-                    controller: _confirmPinController1,
-                    labelText: 'Confirm New PIN',
-                    hintText: 'Re-enter new 4-digit PIN',
-                    validator: (val) {
-                      if (val == null || val.isEmpty) {
-                        return 'Confirm PIN cannot be empty';
-                      }
-                      if (val.length != 4) {
-                        return 'PIN must be exactly 4 digits';
-                      }
-                      if (val != _newPinController1.text) {
-                        return 'Confirm PIN does not match';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _verifyOption1,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.primaryColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : Text(
-                              'Reset PIN',
-                              style: AppTypography.titleMedium.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ] else if (_selectedOption == 2) ...[
-            // Back Button
-            TextButton.icon(
-              onPressed: () => setState(() => _selectedOption = 0),
-              icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 14,
-                color: context.primaryColor,
-              ),
-              label: Text(
-                'Back to options',
-                style: TextStyle(color: context.primaryColor),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            if (!_isAnswerVerified) ...[
-              Text(
-                'Question:',
-                style: AppTypography.bodyMedium.copyWith(
+              const SizedBox(height: AppSpacing.lg),
+            ],
+
+            if (_selectedOption == 0) ...[
+              // Option 1 Selector
+              ListTile(
+                leading: Icon(Icons.pin_rounded, color: context.primaryColor),
+                title: Text(
+                  'Option 1: Verify Current PIN',
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: context.textPrimaryColor,
+                  ),
+                ),
+                subtitle: Text(
+                  'Enter your active PIN to change it',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: context.textSecondaryColor,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
                   color: context.textSecondaryColor,
-                  fontWeight: FontWeight.bold,
                 ),
+                onTap: () {
+                  setState(() {
+                    _selectedOption = 1;
+                    _errorMessage = null;
+                  });
+                },
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                ref.watch(authNotifierProvider).profileType == 'student'
-                    ? 'What is your expected monthly salary?'
-                    : 'What is your monthly salary?',
-                style: AppTypography.titleMedium.copyWith(
-                  color: context.textPrimaryColor,
-                  fontWeight: FontWeight.w600,
+              const Divider(),
+              // Option 2 Selector
+              ListTile(
+                leading: Icon(
+                  Icons.security_rounded,
+                  color: context.primaryColor,
                 ),
+                title: Text(
+                  'Option 2: Verify Recovery Answer',
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: context.textPrimaryColor,
+                  ),
+                ),
+                subtitle: Text(
+                  'Answer security question to reset PIN',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: context.textSecondaryColor,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: context.textSecondaryColor,
+                ),
+                onTap: () {
+                  setState(() {
+                    _selectedOption = 2;
+                    _errorMessage = null;
+                  });
+                },
               ),
               const SizedBox(height: AppSpacing.xl),
-              TextFormField(
-                controller: _recoveryAnswerController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: TextStyle(color: context.textPrimaryColor),
-                decoration: InputDecoration(
-                  labelText: 'Your Answer (₹)',
-                  labelStyle: TextStyle(color: context.textSecondaryColor),
-                  filled: true,
-                  fillColor: context.surfaceVariantColor,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
+            ] else if (_selectedOption == 1) ...[
+              // Back Button
+              TextButton.icon(
+                onPressed: () => setState(() => _selectedOption = 0),
+                icon: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 14,
+                  color: context.primaryColor,
+                ),
+                label: Text(
+                  'Back to options',
+                  style: TextStyle(color: context.primaryColor),
                 ),
               ),
-              const SizedBox(height: AppSpacing.xxl),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _verifyAnswer,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text(
-                    'Verify Answer',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ] else ...[
+              const SizedBox(height: AppSpacing.md),
               Form(
-                key: _formKey2,
+                key: _formKey1,
                 child: Column(
                   children: [
-                    const Text(
-                      'Answer verified! Enter your new PIN below.',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    _buildPinField(
+                      controller: _currentPinController,
+                      labelText: 'Current PIN',
+                      hintText: 'Enter active 4-digit PIN',
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _buildPinField(
-                      controller: _newPinController2,
+                      controller: _newPinController1,
                       labelText: 'New PIN',
                       hintText: 'Enter new 4-digit PIN',
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _buildPinField(
-                      controller: _confirmPinController2,
+                      controller: _confirmPinController1,
                       labelText: 'Confirm New PIN',
                       hintText: 'Re-enter new 4-digit PIN',
                       validator: (val) {
@@ -470,52 +331,114 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
                         if (val.length != 4) {
                           return 'PIN must be exactly 4 digits';
                         }
-                        if (val != _newPinController2.text) {
+                        if (val != _newPinController1.text) {
                           return 'Confirm PIN does not match';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: AppSpacing.xxl),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _verifyOption2,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.primaryColor,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                            : Text(
-                                'Reset PIN',
-                                style: AppTypography.titleMedium.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                      ),
+                    MLButton.primary(
+                      label: 'Reset PIN',
+                      onPressed: _verifyOption1,
+                      isLoading: _isLoading,
                     ),
                   ],
                 ),
               ),
+            ] else if (_selectedOption == 2) ...[
+              // Back Button
+              TextButton.icon(
+                onPressed: () => setState(() => _selectedOption = 0),
+                icon: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 14,
+                  color: context.primaryColor,
+                ),
+                label: Text(
+                  'Back to options',
+                  style: TextStyle(color: context.primaryColor),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              if (!_isAnswerVerified) ...[
+                Text(
+                  'Question:',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: context.textSecondaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  ref.watch(authNotifierProvider).profileType == 'student'
+                      ? 'What is your expected monthly income?'
+                      : 'What is your monthly salary?',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: context.textPrimaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                MLInput.text(
+                  controller: _recoveryAnswerController,
+                  hintText: 'e.g. 50000',
+                  label: 'Your Answer (₹)',
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+                MLButton.primary(
+                  label: 'Verify Answer',
+                  onPressed: _verifyAnswer,
+                ),
+              ] else ...[
+                Form(
+                  key: _formKey2,
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Answer verified! Enter your new PIN below.',
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildPinField(
+                        controller: _newPinController2,
+                        labelText: 'New PIN',
+                        hintText: 'Enter new 4-digit PIN',
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildPinField(
+                        controller: _confirmPinController2,
+                        labelText: 'Confirm New PIN',
+                        hintText: 'Re-enter new 4-digit PIN',
+                        validator: (val) {
+                          if (val == null || val.isEmpty) {
+                            return 'Confirm PIN cannot be empty';
+                          }
+                          if (val.length != 4) {
+                            return 'PIN must be exactly 4 digits';
+                          }
+                          if (val != _newPinController2.text) {
+                            return 'Confirm PIN does not match';
+                          }
+                          return null;
+                        },
+                      ),
+                      MLButton.primary(
+                        label: 'Reset PIN',
+                        onPressed: _verifyOption2,
+                        isLoading: _isLoading,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -526,11 +449,13 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
     required String hintText,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
+    return MLInput.text(
       controller: controller,
+      hintText: hintText,
+      label: labelText,
       obscureText: true,
-      keyboardType: TextInputType.number,
       maxLength: 4,
+      keyboardType: TextInputType.number,
       style: AppTypography.bodyLarge.copyWith(
         color: context.textPrimaryColor,
         letterSpacing: 8.0,
@@ -539,35 +464,7 @@ class _ForgotPinSheetState extends ConsumerState<ForgotPinSheet> {
         FilteringTextInputFormatter.digitsOnly,
         LengthLimitingTextInputFormatter(4),
       ],
-      decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: AppTypography.bodyMedium.copyWith(
-          color: context.textSecondaryColor,
-        ),
-        hintText: hintText,
-        hintStyle: AppTypography.bodyMedium.copyWith(
-          color: context.textSecondaryColor.withValues(alpha: 0.5),
-          letterSpacing: 0.0,
-        ),
-        filled: true,
-        fillColor: context.surfaceVariantColor,
-        counterText: '',
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: context.primaryColor, width: 1.5),
-        ),
-        errorStyle: const TextStyle(height: 0.8),
-      ),
-      validator:
-          validator ??
+      validator: validator ??
           (val) {
             if (val == null || val.isEmpty) return '$labelText cannot be empty';
             if (val.length != 4) return 'PIN must be exactly 4 digits';

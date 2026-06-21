@@ -1,0 +1,8 @@
+graph TD
+    A[(Transaction DB)] --> B[Fetch Current Month]
+    B --> C{Group By Category}
+    C --> D[Calculate Sum per Category]
+    D --> E[Compare vs Budget Limits]
+    E --> F[Generate UI Models]
+    F --> G[Render LiquidProgressRing]
+    F --> H[Render GradientProgressBar]

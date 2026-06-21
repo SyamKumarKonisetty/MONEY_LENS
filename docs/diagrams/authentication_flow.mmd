@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant User
+    participant App
+    participant Storage as SharedPreferences
+    participant Hash as CryptoEngine
+    
+    User->>App: Opens App
+    App->>Storage: Check for saved PIN hash
+    Storage-->>App: Hash Exists
+    App->>User: Show Lock Screen
+    User->>App: Enters 1234
+    App->>Hash: Hash("1234" + Salt)
+    Hash-->>App: Computed Hash
+    App->>App: Compare Computed == Stored
+    App->>User: Unlock Dashboard

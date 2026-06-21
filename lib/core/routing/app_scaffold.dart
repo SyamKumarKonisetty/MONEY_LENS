@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_radius.dart';
-import '../theme/app_typography.dart';
-import '../animations/animation_constants.dart';
+
 import '../extensions/context_extensions.dart';
-import '../constants/app_constants.dart';
 import '../../features/notifications/presentation/widgets/in_app_notification_banner.dart';
+
+
+import '../ui_engine/glass/glass_config.dart';
+import '../ui_engine/glass/glass_navigation.dart';
 
 /// The root scaffold containing the animated bottom navigation bar.
 ///
@@ -35,20 +36,25 @@ class AppScaffold extends StatelessWidget {
             right: 0,
             child: InAppNotificationBanner(),
           ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: DynamicIslandNavBar(
+              currentIndex: navigationShell.currentIndex,
+              onTap: (index) => navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              ),
+            ),
+          ),
         ],
-      ),
-      bottomNavigationBar: _MoneyLensNavBar(
-        currentIndex: navigationShell.currentIndex,
-        onTap: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
-        ),
       ),
     );
   }
 }
 
-// ─── Navigation Bar ───────────────────────────────────────────────────────────
+// ─── Dynamic Island Navigation ────────────────────────────────────────────────
 
 class _NavItem {
   const _NavItem({
@@ -85,114 +91,47 @@ const List<_NavItem> _navItems = [
   ),
 ];
 
-/// Custom bottom navigation bar — Apple-inspired, no Material defaults.
-class _MoneyLensNavBar extends StatelessWidget {
-  const _MoneyLensNavBar({required this.currentIndex, required this.onTap});
+class DynamicIslandNavBar extends StatelessWidget {
+  const DynamicIslandNavBar({super.key, required this.currentIndex, required this.onTap});
 
   final int currentIndex;
   final ValueChanged<int> onTap;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final bgColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final borderColor = isDark
-        ? AppColors.separatorDark
-        : AppColors.separatorLight;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
-        border: Border(top: BorderSide(color: borderColor, width: 0.5)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: AppConstants.navBarHeight,
-          child: Row(
-            children: List.generate(
-              _navItems.length,
-              (index) => Expanded(
-                child: _NavBarItem(
-                  item: _navItems[index],
-                  isSelected: index == currentIndex,
-                  onTap: () => onTap(index),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24.0),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1677FF).withValues(alpha: GlassConfig.ambientGlowOpacity),
+                  blurRadius: 32,
+                  spreadRadius: -4,
+                  offset: const Offset(0, 16),
                 ),
-              ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 24,
+                  spreadRadius: -8,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: GlassNavigation(
+              currentIndex: currentIndex,
+              onTap: onTap,
+              items: _navItems.map((item) => GlassNavigationItem(
+                icon: item.icon,
+                label: item.label,
+              )).toList(),
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Individual nav bar item with animated icon + indicator.
-class _NavBarItem extends StatelessWidget {
-  const _NavBarItem({
-    required this.item,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final _NavItem item;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final activeColor = context.primaryColor;
-    final inactiveColor = context.textSecondaryColor;
-
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Icon with animated switcher
-          AnimatedSwitcher(
-            duration: AppAnimations.fast,
-            transitionBuilder: (child, animation) {
-              return ScaleTransition(
-                scale: animation,
-                child: FadeTransition(opacity: animation, child: child),
-              );
-            },
-            child: Icon(
-              isSelected ? item.activeIcon : item.icon,
-              key: ValueKey(isSelected),
-              color: isSelected ? activeColor : inactiveColor,
-              size: AppConstants.navBarIconSize,
-            ),
-          ),
-
-          const SizedBox(height: 2),
-
-          // Label
-          AnimatedDefaultTextStyle(
-            duration: AppAnimations.fast,
-            style: AppTypography.navLabel.copyWith(
-              color: isSelected ? activeColor : inactiveColor,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            ),
-            child: Text(item.label),
-          ),
-
-          const SizedBox(height: 4),
-
-          // Selection indicator dot
-          AnimatedContainer(
-            duration: AppAnimations.fast,
-            curve: AppAnimations.smooth,
-            width: isSelected ? 16 : 0,
-            height: isSelected ? 3 : 0,
-            decoration: BoxDecoration(
-              color: activeColor,
-              borderRadius: AppRadius.circularFull,
-            ),
-          ),
-        ],
       ),
     );
   }

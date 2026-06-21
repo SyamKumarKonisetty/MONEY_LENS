@@ -5,7 +5,29 @@ import '../../../expenses/presentation/providers/expense_provider.dart';
 /// Transaction filter options.
 enum TransactionFilter { all, income, expense }
 
-/// Transactions filter state notifier.
+/// Transaction sort options.
+enum TransactionSort { newest, oldest, amountHighToLow, amountLowToHigh }
+
+/// Transaction date filter options.
+enum TransactionDateFilter { all, today, week, month }
+
+/// Transactions search query provider.
+final transactionSearchQueryProvider = StateProvider<String>((ref) => '');
+
+/// Transactions sort provider.
+final transactionSortProvider = StateProvider<TransactionSort>(
+  (ref) => TransactionSort.newest,
+);
+
+/// Transactions date range filter provider.
+final transactionDateFilterProvider = StateProvider<TransactionDateFilter>(
+  (ref) => TransactionDateFilter.all,
+);
+
+/// Transactions category filter provider.
+final transactionCategoryFilterProvider = StateProvider<String?>((ref) => null);
+
+/// Transactions type filter state notifier.
 class TransactionFilterNotifier extends StateNotifier<TransactionFilter> {
   TransactionFilterNotifier() : super(TransactionFilter.all);
 
@@ -38,29 +60,103 @@ final allTransactionsProvider = Provider<List<Transaction>>((ref) {
 
 /// Filtered transactions based on active filter.
 final filteredTransactionsProvider = Provider<List<Transaction>>((ref) {
-  final filter = ref.watch(transactionFilterProvider);
   final all = ref.watch(allTransactionsProvider);
+  final typeFilter = ref.watch(transactionFilterProvider);
+  final searchQuery = ref
+      .watch(transactionSearchQueryProvider)
+      .trim()
+      .toLowerCase();
+  final dateFilter = ref.watch(transactionDateFilterProvider);
+  final categoryFilter = ref.watch(transactionCategoryFilterProvider);
+  final sort = ref.watch(transactionSortProvider);
 
-  switch (filter) {
-    case TransactionFilter.income:
-      return all.where((t) => t.type.isIncome).toList();
-    case TransactionFilter.expense:
-      return all.where((t) => t.type.isExpense).toList();
-    case TransactionFilter.all:
-      return all;
+  List<Transaction> list = [...all];
+
+  // 1. Filter by type
+  if (typeFilter == TransactionFilter.income) {
+    list = list.where((t) => t.type.isIncome).toList();
+  } else if (typeFilter == TransactionFilter.expense) {
+    list = list.where((t) => t.type.isExpense).toList();
   }
+
+  // 2. Filter by search query
+  if (searchQuery.isNotEmpty) {
+    list = list.where((t) {
+      final titleMatch = t.title.toLowerCase().contains(searchQuery);
+      final categoryMatch = t.categoryId.toLowerCase().contains(searchQuery);
+      final noteMatch = t.note?.toLowerCase().contains(searchQuery) ?? false;
+      return titleMatch || categoryMatch || noteMatch;
+    }).toList();
+  }
+
+  // 3. Filter by date range
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  if (dateFilter == TransactionDateFilter.today) {
+    list = list.where((t) {
+      final txDate = DateTime(t.date.year, t.date.month, t.date.day);
+      return txDate == today;
+    }).toList();
+  } else if (dateFilter == TransactionDateFilter.week) {
+    final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+    list = list.where((t) {
+      return t.date.isAfter(startOfWeek.subtract(const Duration(seconds: 1)));
+    }).toList();
+  } else if (dateFilter == TransactionDateFilter.month) {
+    list = list.where((t) {
+      return t.date.year == now.year && t.date.month == now.month;
+    }).toList();
+  }
+
+  // 4. Filter by category
+  if (categoryFilter != null) {
+    list = list
+        .where(
+          (t) => t.categoryId.toLowerCase() == categoryFilter.toLowerCase(),
+        )
+        .toList();
+  }
+
+  // 5. Sort list
+  switch (sort) {
+    case TransactionSort.newest:
+      list.sort((a, b) => b.date.compareTo(a.date));
+      break;
+    case TransactionSort.oldest:
+      list.sort((a, b) => a.date.compareTo(b.date));
+      break;
+    case TransactionSort.amountHighToLow:
+      list.sort((a, b) => b.amount.compareTo(a.amount));
+      break;
+    case TransactionSort.amountLowToHigh:
+      list.sort((a, b) => a.amount.compareTo(b.amount));
+      break;
+  }
+
+  return list;
 });
 
-/// Transactions grouped by date string.
+/// Transactions grouped by date string (or amount header if sorted by amount).
 final groupedTransactionsProvider = Provider<Map<String, List<Transaction>>>((
   ref,
 ) {
   final transactions = ref.watch(filteredTransactionsProvider);
+  final sort = ref.watch(transactionSortProvider);
   final Map<String, List<Transaction>> grouped = {};
 
-  for (final t in transactions) {
-    final key = _formatDateKey(t.date);
-    grouped.putIfAbsent(key, () => []).add(t);
+  if (sort == TransactionSort.amountHighToLow) {
+    if (transactions.isNotEmpty) {
+      grouped['Highest Amount'] = transactions;
+    }
+  } else if (sort == TransactionSort.amountLowToHigh) {
+    if (transactions.isNotEmpty) {
+      grouped['Lowest Amount'] = transactions;
+    }
+  } else {
+    for (final t in transactions) {
+      final key = _formatDateKey(t.date);
+      grouped.putIfAbsent(key, () => []).add(t);
+    }
   }
 
   return grouped;

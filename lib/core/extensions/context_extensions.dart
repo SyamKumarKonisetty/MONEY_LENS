@@ -15,8 +15,8 @@ extension BuildContextExtensions on BuildContext {
   ThemeData get theme => Theme.of(this);
   ColorScheme get colorScheme => Theme.of(this).colorScheme;
   TextTheme get textTheme => Theme.of(this).textTheme;
-  bool get isDark => Theme.of(this).brightness == Brightness.dark;
-  bool get isLight => !isDark;
+  bool get isDark => true;
+  bool get isLight => false;
 
   // ─── Media ────────────────────────────────────────────────────────────────
 
@@ -28,34 +28,25 @@ extension BuildContextExtensions on BuildContext {
 
   // ─── App-specific colors ──────────────────────────────────────────────────
 
-  Color get backgroundColor =>
-      isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+  Color get backgroundColor => AppColors.backgroundDark;
 
-  Color get surfaceColor =>
-      isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+  Color get surfaceColor => AppColors.surfaceDark;
 
-  Color get surfaceVariantColor =>
-      isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight;
+  Color get surfaceVariantColor => AppColors.surfaceVariantDark;
 
-  Color get textPrimaryColor =>
-      isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+  Color get textPrimaryColor => AppColors.textPrimaryDark;
 
-  Color get textSecondaryColor =>
-      isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+  Color get textSecondaryColor => AppColors.textSecondaryDark;
 
-  Color get separatorColor =>
-      isDark ? AppColors.separatorDark : AppColors.separatorLight;
+  Color get separatorColor => AppColors.separatorDark;
 
-  Color get primaryColor =>
-      isDark ? AppColors.primaryDark : AppColors.primaryLight;
+  Color get primaryColor => AppColors.primaryDark;
 
-  Color get successColor =>
-      isDark ? AppColors.successDark : AppColors.successLight;
+  Color get successColor => AppColors.successDark;
 
-  Color get warningColor =>
-      isDark ? AppColors.warningDark : AppColors.warningLight;
+  Color get warningColor => AppColors.warningDark;
 
-  Color get errorColor => isDark ? AppColors.errorDark : AppColors.errorLight;
+  Color get errorColor => AppColors.errorDark;
 
-  Color get glassColor => isDark ? AppColors.glassDark : AppColors.glassLight;
+  Color get glassColor => AppColors.glassDark;
 }

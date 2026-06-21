@@ -5,6 +5,8 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/extensions/context_extensions.dart';
+import '../../../design_system/components/buttons.dart';
+import '../../../design_system/components/inputs.dart';
 import '../providers/auth_provider.dart';
 
 class ChangePinSheet extends ConsumerStatefulWidget {
@@ -102,131 +104,105 @@ class _ChangePinSheetState extends ConsumerState<ChangePinSheet> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 36,
-              height: 5,
-              decoration: BoxDecoration(
-                color: context.separatorColor,
-                borderRadius: AppRadius.circularFull,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          Text(
-            'Change PIN',
-            style: AppTypography.titleLarge.copyWith(
-              color: context.textPrimaryColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Update your 4-digit security passcode.',
-            style: AppTypography.bodySmall.copyWith(
-              color: context.textSecondaryColor,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-
-          if (_errorMessage != null) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: context.errorColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                _errorMessage!,
-                style: TextStyle(
-                  color: context.errorColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: context.separatorColor,
+                  borderRadius: AppRadius.circularFull,
                 ),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-          ],
 
-          Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                _buildPinField(
-                  controller: _currentPinController,
-                  labelText: 'Current PIN',
-                  hintText: 'Enter active 4-digit PIN',
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                _buildPinField(
-                  controller: _newPinController,
-                  labelText: 'New PIN',
-                  hintText: 'Enter new 4-digit PIN',
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                _buildPinField(
-                  controller: _confirmPinController,
-                  labelText: 'Confirm New PIN',
-                  hintText: 'Re-enter new 4-digit PIN',
-                  validator: (val) {
-                    if (val == null || val.isEmpty) {
-                      return 'Confirm PIN cannot be empty';
-                    }
-                    if (val.length != 4) {
-                      return 'PIN must be exactly 4 digits';
-                    }
-                    if (val != _newPinController.text) {
-                      return 'Confirm PIN does not match';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppSpacing.xxl),
+            Text(
+              'Change PIN',
+              style: AppTypography.titleLarge.copyWith(
+                color: context.textPrimaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Update your 4-digit security passcode.',
+              style: AppTypography.bodySmall.copyWith(
+                color: context.textSecondaryColor,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : Text(
-                            'Update PIN',
-                            style: AppTypography.titleMedium.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+            if (_errorMessage != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: context.errorColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _errorMessage!,
+                  style: TextStyle(
+                    color: context.errorColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  _buildPinField(
+                    controller: _currentPinController,
+                    labelText: 'Current PIN',
+                    hintText: 'Enter active 4-digit PIN',
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildPinField(
+                    controller: _newPinController,
+                    labelText: 'New PIN',
+                    hintText: 'Enter new 4-digit PIN',
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildPinField(
+                    controller: _confirmPinController,
+                    labelText: 'Confirm New PIN',
+                    hintText: 'Re-enter new 4-digit PIN',
+                    validator: (val) {
+                      if (val == null || val.isEmpty) {
+                        return 'Confirm PIN cannot be empty';
+                      }
+                      if (val.length != 4) {
+                        return 'PIN must be exactly 4 digits';
+                      }
+                      if (val != _newPinController.text) {
+                        return 'Confirm PIN does not match';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+
+                  MLButton.primary(
+                    label: 'Update PIN',
+                    onPressed: _submit,
+                    isLoading: _isLoading,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -237,11 +213,13 @@ class _ChangePinSheetState extends ConsumerState<ChangePinSheet> {
     required String hintText,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
+    return MLInput.text(
       controller: controller,
+      hintText: hintText,
+      label: labelText,
       obscureText: true,
-      keyboardType: TextInputType.number,
       maxLength: 4,
+      keyboardType: TextInputType.number,
       style: AppTypography.bodyLarge.copyWith(
         color: context.textPrimaryColor,
         letterSpacing: 8.0,
@@ -250,35 +228,7 @@ class _ChangePinSheetState extends ConsumerState<ChangePinSheet> {
         FilteringTextInputFormatter.digitsOnly,
         LengthLimitingTextInputFormatter(4),
       ],
-      decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: AppTypography.bodyMedium.copyWith(
-          color: context.textSecondaryColor,
-        ),
-        hintText: hintText,
-        hintStyle: AppTypography.bodyMedium.copyWith(
-          color: context.textSecondaryColor.withValues(alpha: 0.5),
-          letterSpacing: 0.0,
-        ),
-        filled: true,
-        fillColor: context.surfaceVariantColor,
-        counterText: '',
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: context.primaryColor, width: 1.5),
-        ),
-        errorStyle: const TextStyle(height: 0.8),
-      ),
-      validator:
-          validator ??
+      validator: validator ??
           (val) {
             if (val == null || val.isEmpty) return '$labelText cannot be empty';
             if (val.length != 4) return 'PIN must be exactly 4 digits';

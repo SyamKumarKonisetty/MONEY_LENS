@@ -11,6 +11,9 @@ class BudgetModel extends BudgetEntity {
     super.remainingAmount = 0.0,
     required super.createdAt,
     required super.updatedAt,
+    super.period = 'monthly',
+    super.isEnabled = true,
+    super.isArchived = false,
   });
 
   factory BudgetModel.fromDb(Budget row) {
@@ -22,6 +25,9 @@ class BudgetModel extends BudgetEntity {
       remainingAmount: row.remainingAmount,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+      period: row.period,
+      isEnabled: row.isEnabled,
+      isArchived: row.isArchived,
     );
   }
 
@@ -34,6 +40,9 @@ class BudgetModel extends BudgetEntity {
       remainingAmount: Value(entity.remainingAmount),
       createdAt: Value(entity.createdAt),
       updatedAt: Value(entity.updatedAt),
+      period: Value(entity.period),
+      isEnabled: Value(entity.isEnabled),
+      isArchived: Value(entity.isArchived),
     );
   }
 }

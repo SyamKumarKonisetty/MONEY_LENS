@@ -14,11 +14,14 @@ import '../../features/auth/presentation/pin_login_screen.dart';
 import '../constants/app_constants.dart';
 import 'app_scaffold.dart';
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
 /// MoneyLens GoRouter provider with authentication gates.
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authNotifierProvider);
 
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: AppConstants.routeDashboard,
     debugLogDiagnostics: false,
     refreshListenable: authNotifier,
@@ -111,16 +114,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ─── Full-screen modal routes (outside tab shell) ──────────────────
       GoRoute(
         path: AppConstants.routeBudget,
+        parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             const MaterialPage(fullscreenDialog: true, child: BudgetScreen()),
       ),
       GoRoute(
         path: AppConstants.routeReports,
+        parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             const MaterialPage(fullscreenDialog: true, child: ReportsScreen()),
       ),
       GoRoute(
         path: AppConstants.routeNotifications,
+        parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => const MaterialPage(
           fullscreenDialog: true,
           child: NotificationsScreen(),
@@ -128,6 +134,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppConstants.routeSmsInbox,
+        parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             const MaterialPage(fullscreenDialog: true, child: SmsInboxScreen()),
       ),

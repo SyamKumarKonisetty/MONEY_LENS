@@ -590,6 +590,46 @@ class $BudgetsTable extends Budgets with TableInfo<$BudgetsTable, Budget> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _periodMeta = const VerificationMeta('period');
+  @override
+  late final GeneratedColumn<String> period = GeneratedColumn<String>(
+    'period',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('monthly'),
+  );
+  static const VerificationMeta _isEnabledMeta = const VerificationMeta(
+    'isEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> isEnabled = GeneratedColumn<bool>(
+    'is_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _isArchivedMeta = const VerificationMeta(
+    'isArchived',
+  );
+  @override
+  late final GeneratedColumn<bool> isArchived = GeneratedColumn<bool>(
+    'is_archived',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_archived" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -599,6 +639,9 @@ class $BudgetsTable extends Budgets with TableInfo<$BudgetsTable, Budget> {
     remainingAmount,
     createdAt,
     updatedAt,
+    period,
+    isEnabled,
+    isArchived,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -668,6 +711,24 @@ class $BudgetsTable extends Budgets with TableInfo<$BudgetsTable, Budget> {
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('period')) {
+      context.handle(
+        _periodMeta,
+        period.isAcceptableOrUnknown(data['period']!, _periodMeta),
+      );
+    }
+    if (data.containsKey('is_enabled')) {
+      context.handle(
+        _isEnabledMeta,
+        isEnabled.isAcceptableOrUnknown(data['is_enabled']!, _isEnabledMeta),
+      );
+    }
+    if (data.containsKey('is_archived')) {
+      context.handle(
+        _isArchivedMeta,
+        isArchived.isAcceptableOrUnknown(data['is_archived']!, _isArchivedMeta),
+      );
+    }
     return context;
   }
 
@@ -705,6 +766,18 @@ class $BudgetsTable extends Budgets with TableInfo<$BudgetsTable, Budget> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      period: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period'],
+      )!,
+      isEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_enabled'],
+      )!,
+      isArchived: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_archived'],
+      )!,
     );
   }
 
@@ -722,6 +795,9 @@ class Budget extends DataClass implements Insertable<Budget> {
   final double remainingAmount;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String period;
+  final bool isEnabled;
+  final bool isArchived;
   const Budget({
     required this.id,
     required this.category,
@@ -730,6 +806,9 @@ class Budget extends DataClass implements Insertable<Budget> {
     required this.remainingAmount,
     required this.createdAt,
     required this.updatedAt,
+    required this.period,
+    required this.isEnabled,
+    required this.isArchived,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -741,6 +820,9 @@ class Budget extends DataClass implements Insertable<Budget> {
     map['remaining_amount'] = Variable<double>(remainingAmount);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['period'] = Variable<String>(period);
+    map['is_enabled'] = Variable<bool>(isEnabled);
+    map['is_archived'] = Variable<bool>(isArchived);
     return map;
   }
 
@@ -753,6 +835,9 @@ class Budget extends DataClass implements Insertable<Budget> {
       remainingAmount: Value(remainingAmount),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      period: Value(period),
+      isEnabled: Value(isEnabled),
+      isArchived: Value(isArchived),
     );
   }
 
@@ -769,6 +854,9 @@ class Budget extends DataClass implements Insertable<Budget> {
       remainingAmount: serializer.fromJson<double>(json['remainingAmount']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      period: serializer.fromJson<String>(json['period']),
+      isEnabled: serializer.fromJson<bool>(json['isEnabled']),
+      isArchived: serializer.fromJson<bool>(json['isArchived']),
     );
   }
   @override
@@ -782,6 +870,9 @@ class Budget extends DataClass implements Insertable<Budget> {
       'remainingAmount': serializer.toJson<double>(remainingAmount),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'period': serializer.toJson<String>(period),
+      'isEnabled': serializer.toJson<bool>(isEnabled),
+      'isArchived': serializer.toJson<bool>(isArchived),
     };
   }
 
@@ -793,6 +884,9 @@ class Budget extends DataClass implements Insertable<Budget> {
     double? remainingAmount,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? period,
+    bool? isEnabled,
+    bool? isArchived,
   }) => Budget(
     id: id ?? this.id,
     category: category ?? this.category,
@@ -801,6 +895,9 @@ class Budget extends DataClass implements Insertable<Budget> {
     remainingAmount: remainingAmount ?? this.remainingAmount,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    period: period ?? this.period,
+    isEnabled: isEnabled ?? this.isEnabled,
+    isArchived: isArchived ?? this.isArchived,
   );
   Budget copyWithCompanion(BudgetsCompanion data) {
     return Budget(
@@ -817,6 +914,11 @@ class Budget extends DataClass implements Insertable<Budget> {
           : this.remainingAmount,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      period: data.period.present ? data.period.value : this.period,
+      isEnabled: data.isEnabled.present ? data.isEnabled.value : this.isEnabled,
+      isArchived: data.isArchived.present
+          ? data.isArchived.value
+          : this.isArchived,
     );
   }
 
@@ -829,7 +931,10 @@ class Budget extends DataClass implements Insertable<Budget> {
           ..write('spentAmount: $spentAmount, ')
           ..write('remainingAmount: $remainingAmount, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('period: $period, ')
+          ..write('isEnabled: $isEnabled, ')
+          ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();
   }
@@ -843,6 +948,9 @@ class Budget extends DataClass implements Insertable<Budget> {
     remainingAmount,
     createdAt,
     updatedAt,
+    period,
+    isEnabled,
+    isArchived,
   );
   @override
   bool operator ==(Object other) =>
@@ -854,7 +962,10 @@ class Budget extends DataClass implements Insertable<Budget> {
           other.spentAmount == this.spentAmount &&
           other.remainingAmount == this.remainingAmount &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.period == this.period &&
+          other.isEnabled == this.isEnabled &&
+          other.isArchived == this.isArchived);
 }
 
 class BudgetsCompanion extends UpdateCompanion<Budget> {
@@ -865,6 +976,9 @@ class BudgetsCompanion extends UpdateCompanion<Budget> {
   final Value<double> remainingAmount;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<String> period;
+  final Value<bool> isEnabled;
+  final Value<bool> isArchived;
   const BudgetsCompanion({
     this.id = const Value.absent(),
     this.category = const Value.absent(),
@@ -873,6 +987,9 @@ class BudgetsCompanion extends UpdateCompanion<Budget> {
     this.remainingAmount = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.period = const Value.absent(),
+    this.isEnabled = const Value.absent(),
+    this.isArchived = const Value.absent(),
   });
   BudgetsCompanion.insert({
     this.id = const Value.absent(),
@@ -882,6 +999,9 @@ class BudgetsCompanion extends UpdateCompanion<Budget> {
     this.remainingAmount = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
+    this.period = const Value.absent(),
+    this.isEnabled = const Value.absent(),
+    this.isArchived = const Value.absent(),
   }) : category = Value(category),
        monthlyLimit = Value(monthlyLimit),
        createdAt = Value(createdAt),
@@ -894,6 +1014,9 @@ class BudgetsCompanion extends UpdateCompanion<Budget> {
     Expression<double>? remainingAmount,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<String>? period,
+    Expression<bool>? isEnabled,
+    Expression<bool>? isArchived,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -903,6 +1026,9 @@ class BudgetsCompanion extends UpdateCompanion<Budget> {
       if (remainingAmount != null) 'remaining_amount': remainingAmount,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (period != null) 'period': period,
+      if (isEnabled != null) 'is_enabled': isEnabled,
+      if (isArchived != null) 'is_archived': isArchived,
     });
   }
 
@@ -914,6 +1040,9 @@ class BudgetsCompanion extends UpdateCompanion<Budget> {
     Value<double>? remainingAmount,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<String>? period,
+    Value<bool>? isEnabled,
+    Value<bool>? isArchived,
   }) {
     return BudgetsCompanion(
       id: id ?? this.id,
@@ -923,6 +1052,9 @@ class BudgetsCompanion extends UpdateCompanion<Budget> {
       remainingAmount: remainingAmount ?? this.remainingAmount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      period: period ?? this.period,
+      isEnabled: isEnabled ?? this.isEnabled,
+      isArchived: isArchived ?? this.isArchived,
     );
   }
 
@@ -950,6 +1082,15 @@ class BudgetsCompanion extends UpdateCompanion<Budget> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (period.present) {
+      map['period'] = Variable<String>(period.value);
+    }
+    if (isEnabled.present) {
+      map['is_enabled'] = Variable<bool>(isEnabled.value);
+    }
+    if (isArchived.present) {
+      map['is_archived'] = Variable<bool>(isArchived.value);
+    }
     return map;
   }
 
@@ -962,7 +1103,10 @@ class BudgetsCompanion extends UpdateCompanion<Budget> {
           ..write('spentAmount: $spentAmount, ')
           ..write('remainingAmount: $remainingAmount, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('period: $period, ')
+          ..write('isEnabled: $isEnabled, ')
+          ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();
   }
@@ -1946,6 +2090,9 @@ typedef $$BudgetsTableCreateCompanionBuilder =
       Value<double> remainingAmount,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<String> period,
+      Value<bool> isEnabled,
+      Value<bool> isArchived,
     });
 typedef $$BudgetsTableUpdateCompanionBuilder =
     BudgetsCompanion Function({
@@ -1956,6 +2103,9 @@ typedef $$BudgetsTableUpdateCompanionBuilder =
       Value<double> remainingAmount,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<String> period,
+      Value<bool> isEnabled,
+      Value<bool> isArchived,
     });
 
 class $$BudgetsTableFilterComposer
@@ -1999,6 +2149,21 @@ class $$BudgetsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get period => $composableBuilder(
+    column: $table.period,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isEnabled => $composableBuilder(
+    column: $table.isEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isArchived => $composableBuilder(
+    column: $table.isArchived,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2046,6 +2211,21 @@ class $$BudgetsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get period => $composableBuilder(
+    column: $table.period,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isEnabled => $composableBuilder(
+    column: $table.isEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isArchived => $composableBuilder(
+    column: $table.isArchived,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$BudgetsTableAnnotationComposer
@@ -2083,6 +2263,17 @@ class $$BudgetsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get period =>
+      $composableBuilder(column: $table.period, builder: (column) => column);
+
+  GeneratedColumn<bool> get isEnabled =>
+      $composableBuilder(column: $table.isEnabled, builder: (column) => column);
+
+  GeneratedColumn<bool> get isArchived => $composableBuilder(
+    column: $table.isArchived,
+    builder: (column) => column,
+  );
 }
 
 class $$BudgetsTableTableManager
@@ -2120,6 +2311,9 @@ class $$BudgetsTableTableManager
                 Value<double> remainingAmount = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<String> period = const Value.absent(),
+                Value<bool> isEnabled = const Value.absent(),
+                Value<bool> isArchived = const Value.absent(),
               }) => BudgetsCompanion(
                 id: id,
                 category: category,
@@ -2128,6 +2322,9 @@ class $$BudgetsTableTableManager
                 remainingAmount: remainingAmount,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                period: period,
+                isEnabled: isEnabled,
+                isArchived: isArchived,
               ),
           createCompanionCallback:
               ({
@@ -2138,6 +2335,9 @@ class $$BudgetsTableTableManager
                 Value<double> remainingAmount = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<String> period = const Value.absent(),
+                Value<bool> isEnabled = const Value.absent(),
+                Value<bool> isArchived = const Value.absent(),
               }) => BudgetsCompanion.insert(
                 id: id,
                 category: category,
@@ -2146,6 +2346,9 @@ class $$BudgetsTableTableManager
                 remainingAmount: remainingAmount,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                period: period,
+                isEnabled: isEnabled,
+                isArchived: isArchived,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

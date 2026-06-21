@@ -6,9 +6,9 @@ class AppConstants {
 
   // App identity
   static const String appName = 'MoneyLens';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.2.0';
   static const String appBuildNumber = '1';
-  static const String developerName = 'SYAM';
+  static const String developerName = 'Syam Kumar';
 
   // User greeting
   static const String userName = 'Syam';

@@ -3,6 +3,7 @@ import '../../domain/entities/expense_entity.dart';
 import '../../domain/repositories/expense_repository.dart';
 import '../../data/repositories/expense_repository_impl.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/services/notifications/notification_manager.dart' as import_nm;
 
 /// Presentation state for the Expenses feature.
 class ExpenseState {
@@ -54,6 +55,10 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
       transactionType: transactionType,
     );
     await _repository.addExpense(expense);
+    
+    // Hook: Cancel today's daily reminder since the user has logged an expense
+    import_nm.NotificationManager().cancelNotification(import_nm.NotificationManager.idDailyReminder);
+    // (We prefix it to avoid import conflicts if needed, but I'll add the proper import at the top of the file)
   }
 
   /// Updates an existing expense in DB.

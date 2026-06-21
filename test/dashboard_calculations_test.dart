@@ -7,7 +7,6 @@ import 'package:money_lens/features/expenses/domain/repositories/expense_reposit
 import 'package:money_lens/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:money_lens/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:money_lens/features/settings/presentation/providers/settings_provider.dart';
-import 'package:money_lens/features/dashboard/presentation/widgets/quick_add_section.dart';
 
 /// Fake repository for testing.
 class FakeExpenseRepository implements ExpenseRepository {

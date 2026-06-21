@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/design/colors/app_colors.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../providers/notifications_provider.dart';
 import '../../../transactions/presentation/widgets/add_expense_bottom_sheet.dart';
@@ -85,7 +86,7 @@ class _InAppNotificationBannerState
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: isDark
-                    ? const Color(0xFF1E1E1E).withValues(alpha: 0.95)
+                    ? AppColors.surface2.withValues(alpha: 0.95)
                     : Colors.white.withValues(alpha: 0.95),
                 borderRadius: AppRadius.card,
                 border: Border.all(
@@ -161,7 +162,7 @@ class _InAppNotificationBannerState
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: context.primaryColor,
-                                  foregroundColor: Colors.white,
+                                  foregroundColor: AppColors.textPrimary,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: AppSpacing.md,
                                     vertical: 4,

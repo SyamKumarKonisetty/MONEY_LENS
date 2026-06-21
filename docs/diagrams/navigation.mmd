@@ -1,0 +1,14 @@
+graph TD
+    A[Splash Screen] --> B{Is Authenticated?}
+    B -->|No| C[Onboarding / PIN Setup]
+    B -->|Yes| D[Dashboard Shell]
+    
+    C --> D
+    
+    D --> E[/dashboard/transactions]
+    D --> F[/dashboard/analytics]
+    D --> G[/dashboard/inbox]
+    D --> H[/dashboard/settings]
+    
+    H --> I[Export Route]
+    H --> J[Backup Route]

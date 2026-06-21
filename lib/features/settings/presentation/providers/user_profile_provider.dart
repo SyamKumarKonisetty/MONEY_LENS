@@ -10,7 +10,7 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
   final SharedPreferences _prefs;
 
   static const String _prefNameKey = 'profile_name';
-  static const String _defaultName = 'Syam';
+  static const String _defaultName = 'Guest';
 
   static UserProfile _loadInitial(SharedPreferences prefs) {
     final name = prefs.getString(_prefNameKey) ?? _defaultName;

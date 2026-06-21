@@ -5,9 +5,13 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/extensions/context_extensions.dart';
+import '../../../design_system/components/buttons.dart';
+import '../../../design_system/components/inputs.dart';
+import '../../../design_system/components/chips.dart';
 import '../providers/auth_provider.dart';
-import 'forgot_pin_sheet.dart';
 import '../../settings/presentation/providers/user_profile_provider.dart';
+import 'forgot_pin_sheet.dart';
+import '../../../core/design/colors/app_colors.dart';
 
 class PinLoginScreen extends ConsumerStatefulWidget {
   final bool isSetupMode;
@@ -52,6 +56,11 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
     if (_inputPin.length == 4) {
       _processPin();
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   void _onDeleteTap() {
@@ -116,6 +125,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useRootNavigator: true,
       builder: (_) => const ForgotPinSheet(),
     );
   }
@@ -189,12 +199,12 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF34C759).withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
+                          color: AppColors.incomeGreen.withValues(alpha: 0.1),
+                          borderRadius: AppRadius.pill,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.school_rounded,
-                          color: Color(0xFF34C759),
+                          color: AppColors.incomeGreen,
                           size: 24,
                         ),
                       ),
@@ -254,12 +264,12 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF007AFF).withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
+                          color: AppColors.sapphireBlue.withValues(alpha: 0.1),
+                          borderRadius: AppRadius.pill,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.work_rounded,
-                          color: Color(0xFF007AFF),
+                          color: AppColors.sapphireBlue,
                           size: 24,
                         ),
                       ),
@@ -321,22 +331,17 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _selectedProfile = null;
-                  });
-                },
-                icon: Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  size: 14,
-                  color: context.primaryColor,
+              Align(
+                alignment: Alignment.centerLeft,
+                child: MLButton.text(
+                  label: 'Back to Profile selection',
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  onPressed: () {
+                    setState(() {
+                      _selectedProfile = null;
+                    });
+                  },
                 ),
-                label: Text(
-                  'Back to Profile selection',
-                  style: TextStyle(color: context.primaryColor),
-                ),
-                style: TextButton.styleFrom(alignment: Alignment.centerLeft),
               ),
               const SizedBox(height: AppSpacing.xl),
               Center(
@@ -392,36 +397,12 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                 key: _recoveryFormKey,
                 child: Column(
                   children: [
-                    TextFormField(
+                    MLInput.number(
                       controller: _recoveryInputController,
-                      keyboardType: TextInputType.number,
+                      hintText: 'e.g. 50000',
+                      label: labelText,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       style: TextStyle(color: context.textPrimaryColor),
-                      decoration: InputDecoration(
-                        labelText: labelText,
-                        labelStyle: TextStyle(
-                          color: context.textSecondaryColor,
-                        ),
-                        hintText: 'e.g. 50000',
-                        hintStyle: TextStyle(
-                          color: context.textSecondaryColor.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: context.surfaceVariantColor,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: context.primaryColor,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter a valid amount greater than 1';
@@ -434,43 +415,25 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                       },
                     ),
                     const SizedBox(height: AppSpacing.xxl),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.primaryColor,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                        onPressed: () async {
-                          if (_recoveryFormKey.currentState!.validate()) {
-                            final amt = double.parse(
-                              _recoveryInputController.text,
-                            );
-                            await ref
-                                .read(userProfileNotifierProvider.notifier)
-                                .updateName(_nameController.text);
-                            ref
-                                .read(authNotifierProvider.notifier)
-                                .setupPinAndRecovery(
-                                  _firstEnteredPin,
-                                  amt,
-                                  _selectedProfile!,
-                                );
-                          }
-                        },
-                        child: Text(
-                          'Save Recovery & PIN',
-                          style: AppTypography.titleMedium.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    MLButton.primary(
+                      label: 'Save Recovery & PIN',
+                      onPressed: () async {
+                        if (_recoveryFormKey.currentState!.validate()) {
+                          final amt = double.parse(
+                            _recoveryInputController.text,
+                          );
+                          await ref
+                              .read(userProfileNotifierProvider.notifier)
+                              .updateName(_nameController.text);
+                          ref
+                              .read(authNotifierProvider.notifier)
+                              .setupPinAndRecovery(
+                                _firstEnteredPin,
+                                amt,
+                                _selectedProfile!,
+                              );
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -494,25 +457,20 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _isEnteringName = false;
-                    _inputPin = '';
-                    _firstEnteredPin = '';
-                    _isConfirming = false;
-                  });
-                },
-                icon: Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  size: 14,
-                  color: context.primaryColor,
+              Align(
+                alignment: Alignment.centerLeft,
+                child: MLButton.text(
+                  label: 'Back to PIN creation',
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  onPressed: () {
+                    setState(() {
+                      _isEnteringName = false;
+                      _inputPin = '';
+                      _firstEnteredPin = '';
+                      _isConfirming = false;
+                    });
+                  },
                 ),
-                label: Text(
-                  'Back to PIN creation',
-                  style: TextStyle(color: context.primaryColor),
-                ),
-                style: TextButton.styleFrom(alignment: Alignment.centerLeft),
               ),
               const SizedBox(height: AppSpacing.xl),
               Center(
@@ -552,37 +510,13 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                 key: _nameFormKey,
                 child: Column(
                   children: [
-                    TextFormField(
+                    MLInput.text(
                       controller: _nameController,
-                      style: TextStyle(color: context.textPrimaryColor),
+                      hintText: 'e.g. Rahul',
+                      label: 'Your Name',
                       maxLength: 25,
-                      textCapitalization: TextCapitalization.words,
+                      style: TextStyle(color: context.textPrimaryColor),
                       inputFormatters: [LengthLimitingTextInputFormatter(25)],
-                      decoration: InputDecoration(
-                        labelText: 'Your Name',
-                        labelStyle: TextStyle(
-                          color: context.textSecondaryColor,
-                        ),
-                        hintText: 'e.g. Syam',
-                        hintStyle: TextStyle(
-                          color: context.textSecondaryColor.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: context.surfaceVariantColor,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: context.primaryColor,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
                       onChanged: (val) {
                         setState(() {});
                       },
@@ -605,47 +539,31 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                       ) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: ChoiceChip(
-                            label: Text(name),
-                            selected: _nameController.text.trim() == name,
+                          child: MLChip.choice(
+                            label: name,
+                            isSelected: _nameController.text.trim() == name,
                             onSelected: (selected) {
-                              setState(() {
-                                _nameController.text = name;
-                              });
+                              if (selected) {
+                                setState(() {
+                                  _nameController.text = name;
+                                });
+                              }
                             },
                           ),
                         );
                       }).toList(),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.primaryColor,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                        onPressed: () {
-                          if (_nameFormKey.currentState!.validate()) {
-                            setState(() {
-                              _isEnteringName = false;
-                              _isSettingUpRecovery = true;
-                            });
-                          }
-                        },
-                        child: Text(
-                          'Continue',
-                          style: AppTypography.titleMedium.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    MLButton.primary(
+                      label: 'Continue',
+                      onPressed: () {
+                        if (_nameFormKey.currentState!.validate()) {
+                          setState(() {
+                            _isEnteringName = false;
+                            _isSettingUpRecovery = true;
+                          });
+                        }
+                      },
                     ),
                   ],
                 ),

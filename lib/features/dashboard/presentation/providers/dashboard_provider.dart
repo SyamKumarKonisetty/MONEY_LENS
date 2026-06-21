@@ -136,3 +136,34 @@ final topCategoryTodayProvider = Provider<String>((ref) {
 
   return topCat;
 });
+
+/// Provider that returns the default 6 categories sorted by frequency of use.
+final quickAddCategoriesProvider = Provider<List<Category>>((ref) {
+  final recentlyUsed = ref.watch(recentlyUsedCategoriesProvider);
+
+  // The default 6 categories requested
+  final defaultIds = [
+    'food',
+    'fuel',
+    'groceries',
+    'transport',
+    'entertainment',
+    'bills',
+  ];
+
+  // Sort the defaultIds based on their index in recentlyUsed list.
+  final sortedIds = List<String>.from(defaultIds);
+  sortedIds.sort((a, b) {
+    final indexA = recentlyUsed.indexWhere((c) => c.id == a);
+    final indexB = recentlyUsed.indexWhere((c) => c.id == b);
+
+    if (indexA != -1 && indexB != -1) {
+      return indexA.compareTo(indexB);
+    }
+    if (indexA != -1) return -1;
+    if (indexB != -1) return 1;
+    return defaultIds.indexOf(a).compareTo(defaultIds.indexOf(b));
+  });
+
+  return sortedIds.map((id) => AppCategories.findById(id)).toList();
+});

@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
 import '../../../core/extensions/context_extensions.dart';
 import 'providers/notifications_provider.dart';
 import 'settings/reminder_settings_sheet.dart';
 import '../domain/entities/notification_item.dart';
 import '../../transactions/presentation/widgets/add_expense_bottom_sheet.dart';
+import 'package:money_lens/core/design/design_system.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
@@ -338,9 +336,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               color: context.errorColor,
               borderRadius: AppRadius.card,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.delete_outline_rounded,
-              color: Colors.white,
+              color: AppColors.textPrimary,
             ),
           ),
           onDismissed: (_) {
@@ -445,7 +443,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: context.primaryColor,
-                                  foregroundColor: Colors.white,
+                                  foregroundColor: AppColors.textPrimary,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: AppSpacing.md,
                                     vertical: 8,
@@ -521,7 +519,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                   fontSize: 48,
                   color: b.isUnlocked
                       ? null
-                      : Colors.grey.withValues(alpha: 0.4),
+                      : AppColors.textMuted.withValues(alpha: 0.4),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -554,7 +552,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 decoration: BoxDecoration(
                   color: b.isUnlocked
                       ? context.primaryColor.withValues(alpha: 0.12)
-                      : Colors.grey.withValues(alpha: 0.12),
+                      : AppColors.textMuted.withValues(alpha: 0.12),
                   borderRadius: AppRadius.circularFull,
                 ),
                 child: Text(

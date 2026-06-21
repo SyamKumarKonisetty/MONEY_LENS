@@ -1,0 +1,20 @@
+erDiagram
+    TRANSACTIONS ||--o{ CATEGORIES : "belongs to"
+    TRANSACTIONS {
+        int id PK
+        double amount
+        string title
+        datetime date
+        string type
+        int categoryId FK
+    }
+    CATEGORIES {
+        int id PK
+        string name
+        string color
+        double budgetLimit
+    }
+    SETTINGS {
+        string key PK
+        string value
+    }

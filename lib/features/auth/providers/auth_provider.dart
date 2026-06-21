@@ -56,6 +56,7 @@ class AuthNotifier extends ChangeNotifier {
     return false;
   }
 
+
   void setupPinAndRecovery(String pin, double recoveryIncome, String profile) {
     _prefs.setString('auth_pin', hashPin(pin));
     _prefs.setString(

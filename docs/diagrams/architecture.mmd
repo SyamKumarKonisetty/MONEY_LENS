@@ -1,0 +1,7 @@
+graph TD
+    A[Presentation Layer - UI] -->|Reads State| B(Provider Layer - Riverpod)
+    A -->|Dispatches Action| B
+    B -->|Calls Methods| C{Repository Layer}
+    C -->|Executes Queries| D[(Data Layer - Drift)]
+    C -->|Invokes Native Code| E[Service Layer]
+    E -->|SMS / Files| F[OS Capabilities]

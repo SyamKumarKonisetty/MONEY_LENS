@@ -1,0 +1,9 @@
+graph TD
+    A[User Hits Export] --> B[Provider Fetches All Data]
+    B --> C{Select Format}
+    C -->|CSV| D[Format Strings]
+    C -->|PDF| E[Generate PDF Layout]
+    D --> F[Write to Temporary Directory]
+    E --> F
+    F --> G[Invoke Native share_plus]
+    G --> H[OS Share Sheet (Email/Drive)]

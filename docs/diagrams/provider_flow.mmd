@@ -1,0 +1,14 @@
+sequenceDiagram
+    participant UI as Flutter Widget
+    participant Notifier as Riverpod Provider
+    participant Repo as Repository
+    participant DB as Drift Database
+    
+    UI->>Notifier: ref.read(provider.notifier).addTransaction()
+    Notifier->>Notifier: Set State = Loading
+    Notifier->>Repo: insert(transaction)
+    Repo->>DB: SQL INSERT
+    DB-->>Repo: Success
+    Repo-->>Notifier: Returns Result
+    Notifier->>Notifier: Set State = Data
+    Notifier-->>UI: ref.watch triggers rebuild

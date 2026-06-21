@@ -4,10 +4,10 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/widgets/primary_button.dart';
 import '../../../expenses/domain/entities/expense_entity.dart';
 import '../../../expenses/presentation/providers/expense_provider.dart';
 import '../../domain/models.dart';
+import '../../../../design_system/components/buttons.dart';
 
 /// Bottom sheet for editing an existing expense.
 class EditExpenseBottomSheet extends ConsumerStatefulWidget {
@@ -358,9 +358,11 @@ class _EditExpenseBottomSheetState
                       const SizedBox(height: AppSpacing.lg),
 
                       // Update button (full width)
-                      PrimaryButton(
-                        label: _isSaving ? 'Updating…' : 'Update Expense',
-                        onPressed: _isSaving ? null : _submit,
+                      MLButton.primary(
+                        label: 'Update Expense',
+                        onPressed: _submit,
+                        isLoading: _isSaving,
+                        isDisabled: _isSaving,
                       ),
                       const SizedBox(height: AppSpacing.md),
 
@@ -368,49 +370,17 @@ class _EditExpenseBottomSheetState
                       Row(
                         children: [
                           Expanded(
-                            child: OutlinedButton.icon(
-                              icon: Icon(
-                                Icons.delete_outline_rounded,
-                                color: context.errorColor,
-                                size: 18,
-                              ),
-                              label: Text(
-                                'Delete',
-                                style: AppTypography.labelLarge.copyWith(
-                                  color: context.errorColor,
-                                ),
-                              ),
+                            child: MLButton.secondary(
+                              label: 'Delete',
+                              icon: Icons.delete_outline_rounded,
                               onPressed: () => _confirmDelete(context),
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(
-                                  color: context.errorColor.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: AppRadius.circularMd,
-                                ),
-                              ),
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
-                            child: TextButton(
+                            child: MLButton.text(
+                              label: 'Cancel',
                               onPressed: () => Navigator.of(context).pop(),
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                              ),
-                              child: Text(
-                                'Cancel',
-                                style: AppTypography.labelLarge.copyWith(
-                                  color: context.textSecondaryColor,
-                                ),
-                              ),
                             ),
                           ),
                         ],

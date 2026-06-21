@@ -1,180 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/widgets/animated_page_wrapper.dart';
-import '../../../core/widgets/section_header.dart';
-import '../../../core/widgets/empty_state_widget.dart';
-import '../../../core/utils/currency_formatter.dart';
-import 'providers/dashboard_provider.dart';
-import 'widgets/greeting_header.dart';
-import 'widgets/balance_card.dart';
-import 'widgets/quick_stats_row.dart';
-import 'widgets/quick_actions_grid.dart';
-import 'widgets/recent_transaction_tile.dart';
-import 'widgets/scan_coming_soon_sheet.dart';
-import 'widgets/quick_add_section.dart';
-import 'widgets/today_summary_section.dart';
-import 'widgets/dashboard_budget_card.dart';
-import '../../../features/transactions/domain/models.dart';
-import '../../../features/transactions/presentation/widgets/add_expense_bottom_sheet.dart';
+import '../../../core/design/design_system.dart';
+import 'sections/budget/monthly_budget_section.dart';
+import 'sections/financial_health/financial_health_section.dart';
+import 'sections/hero/greeting_header.dart';
+import 'sections/hero/hero_financial_card.dart';
+import 'sections/quick_actions/quick_actions_section.dart';
+import 'sections/recent_activity/recent_activity_section.dart';
+import 'sections/smart_insights/smart_insights_section.dart';
+import 'sections/today_story/today_story_section.dart';
 
-/// MoneyLens Dashboard Screen.
+/// MoneyLens NEXT — Reimagined Hero Dashboard Experience screen assembly.
 ///
-/// The primary home view showing:
-/// - Time-aware greeting
-/// - Monthly balance hero card
-/// - Quick stats (income / expenses / savings)
-/// - Quick action shortcuts (all functional)
-/// - Recent 5 transactions
+/// Features clean architectural grouping, beautiful section entrances,
+/// and modularized custom painters to maintain 60 FPS.
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
-  // ─── Quick Action Handlers ─────────────────────────────────────────────────
-
-  void _onAdd(BuildContext context) {
-    showAddTransactionSheet(context);
-  }
-
-  void _onScan(BuildContext context) {
-    ScanComingSoonSheet.show(context);
-  }
-
-  void _onBudget(BuildContext context) {
-    context.push(AppConstants.routeBudget);
-  }
-
-  void _onReports(BuildContext context) {
-    context.push(AppConstants.routeReports);
-  }
-
-  // ─── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final recent = ref.watch(recentTransactionsProvider);
-    final expenses = ref.watch(currentMonthExpensesProvider);
-    final income = ref.watch(currentMonthIncomeProvider);
-    final netBalance = ref.watch(currentMonthNetBalanceProvider);
-    final totalTxs = ref.watch(totalTransactionsCountProvider);
-    final topCategory = ref.watch(topSpendingCategoryProvider);
-
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: Colors.transparent,
-      body: AnimatedPageWrapper(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // Status bar padding
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.giant)),
+      body: RepaintBoundary(
+        child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Safe Area Header Spacer
+              SizedBox(height: AppSpacing.giant),
 
-            // Greeting
-            const SliverToBoxAdapter(child: GreetingHeader()),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
+              // 2. Animated Greeting Header
+              GreetingHeader(),
+              SizedBox(height: AppSpacing.xxl),
 
-            // Balance hero card
-            SliverToBoxAdapter(
-              child: BalanceCard(
-                netBalance: netBalance,
-                totalIncome: income,
-                totalExpenses: expenses,
-              ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppSpacing.cardGap),
-            ),
+              // 3. Hero Financial Card (with slow rotating mesh gradient)
+              HeroFinancialCard(),
+              SizedBox(height: AppSpacing.lg),
 
-            // Budget Card
-            const SliverToBoxAdapter(child: DashboardBudgetCard()),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppSpacing.cardGap + 4),
-            ),
+              // 4. Today's Story (Large narrative context)
+              TodayStorySection(),
+              SizedBox(height: AppSpacing.sectionGap),
 
-            // Quick stats row
-            SliverToBoxAdapter(
-              child: QuickStatsRow(
-                totalTransactions: totalTxs,
-                totalExpenses: CurrencyFormatter.compact(expenses),
-                topCategory: topCategory,
-              ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppSpacing.sectionGap),
-            ),
+              // 5. Springy Glass Quick Actions circular dock
+              QuickActionsSection(),
+              SizedBox(height: AppSpacing.sectionGap),
 
-            // Today Summary Section
-            const SliverToBoxAdapter(child: TodaySummarySection()),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppSpacing.sectionGap),
-            ),
+              // 6. Dynamic Financial Health radial score
+              FinancialHealthSection(),
+              SizedBox(height: AppSpacing.sectionGap),
 
-            // Quick Add Section
-            const SliverToBoxAdapter(child: QuickAddSection()),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppSpacing.sectionGap),
-            ),
+              // 7. Monthly Liquid Progress Ring budget card
+              MonthlyBudgetSection(),
+              SizedBox(height: AppSpacing.sectionGap),
 
-            // Quick actions
-            const SliverToBoxAdapter(
-              child: SectionHeader(title: 'Quick Actions'),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
-            SliverToBoxAdapter(
-              child: QuickActionsGrid(
-                onAdd: () => _onAdd(context),
-                onScan: () => _onScan(context),
-                onBudget: () => _onBudget(context),
-                onReports: () => _onReports(context),
-              ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppSpacing.sectionGap),
-            ),
+              // 8. Recent Timeline list or illustrated empty view
+              RecentActivitySection(),
+              SizedBox(height: AppSpacing.sectionGap),
 
-            // Recent transactions header
-            SliverToBoxAdapter(
-              child: SectionHeader(
-                title: 'Recent',
-                actionLabel: 'See All',
-                onAction: () => context.go(AppConstants.routeTransactions),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+              // 9. Rotating Smart Insights crossfading panel
+              SmartInsightsSection(),
 
-            // Recent transaction list or empty state
-            if (recent.isEmpty)
-              SliverFillRemaining(
-                child: EmptyStateWidget(
-                  icon: Icons.wallet_rounded,
-                  title: 'No transactions yet',
-                  subtitle:
-                      'Add your first transaction to start building your financial timeline.',
-                  actionLabel: 'Add Transaction',
-                  onAction: () => _onAdd(context),
-                ),
-              )
-            else
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => StaggeredListItem(
-                    index: index,
-                    baseDelay: 100,
-                    child: RecentTransactionTile(
-                      transaction: recent[index],
-                      category: AppCategories.findById(
-                        recent[index].categoryId,
-                      ),
-                    ),
-                  ),
-                  childCount: recent.length,
-                ),
-              ),
-
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppSpacing.massive),
-            ),
-          ],
+              // 10. Bottom breathing space to offset floating navigators
+              SizedBox(height: AppSpacing.massive),
+            ],
+          ),
         ),
       ),
     );

@@ -1,17 +1,26 @@
-# money_lens
+# MoneyLens
+**Premium Personal Finance Companion**
 
-A new Flutter project.
+MoneyLens is a meticulously designed, privacy-first personal finance application that helps you track expenses, visualize your budget, and achieve your financial goals—all completely offline.
 
-## Getting Started
+## Features
+- **Premium Glassmorphism UI**: Beautiful, fluid, 60fps animations.
+- **100% Offline & Private**: Zero data collection, no cloud syncing requirements. Your data stays on your device.
+- **Smart SMS Detection**: Automatically detects and categorizes transactions from bank SMS alerts (Android only).
+- **Intelligent Insights**: Dynamic visual charts forecasting your spending trajectory.
+- **Export & Backup**: Native PDF and CSV generation with secure local file sharing.
 
-This project is a starting point for a Flutter application.
+## Build Requirements
+- Flutter SDK `^3.12.2`
+- Android Studio / Xcode
 
-A few resources to get you started if this is your first Flutter project:
+## Compilation (Production)
+```bash
+flutter build appbundle --release --obfuscate --split-debug-info=build/app/outputs/symbols
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Security & Privacy
+MoneyLens utilizes local SQLite via Drift and Sandboxed application storage. We do not transmit logs, analytics, or transaction data externally.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## License
+Copyright © 2026. All rights reserved.

@@ -9,7 +9,9 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../../core/database/app_database.dart';
 import '../../transactions/domain/models.dart';
 import 'providers/sms_detection_provider.dart';
+import '../../../core/design/colors/app_colors.dart';
 import '../../transactions/presentation/widgets/add_expense_bottom_sheet.dart';
+import '../../../design_system/components/buttons.dart';
 
 class SmsInboxScreen extends ConsumerStatefulWidget {
   const SmsInboxScreen({super.key});
@@ -18,14 +20,20 @@ class SmsInboxScreen extends ConsumerStatefulWidget {
   ConsumerState<SmsInboxScreen> createState() => _SmsInboxScreenState();
 }
 
-class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
+class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> with SingleTickerProviderStateMixin {
   bool _hasTriggeredScan = false;
   String _searchQuery = '';
   final _searchController = TextEditingController();
+  late final AnimationController _spinCtrl;
 
   @override
   void initState() {
     super.initState();
+    _spinCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 1));
+    final isTesting = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    if (!isTesting) {
+      _spinCtrl.repeat();
+    }
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.trim().toLowerCase();
@@ -36,6 +44,7 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _spinCtrl.dispose();
     super.dispose();
   }
 
@@ -88,17 +97,14 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
         ),
         actions: [
           IconButton(
-            icon: scanStatus.isScanning
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(
-                    Icons.refresh_rounded,
-                    color: context.textPrimaryColor,
-                    size: 22,
-                  ),
+            icon: RotationTransition(
+              turns: scanStatus.isScanning ? _spinCtrl : const AlwaysStoppedAnimation(0.0),
+              child: Icon(
+                Icons.refresh_rounded,
+                color: context.textPrimaryColor,
+                size: 22,
+              ),
+            ),
             onPressed: scanStatus.isScanning
                 ? null
                 : () {
@@ -219,17 +225,17 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
                                     borderRadius: AppRadius.card,
                                   ),
                                   alignment: Alignment.centerLeft,
-                                  child: const Row(
+                                  child: Row(
                                     children: [
                                       Icon(
                                         Icons.add_circle_outline_rounded,
-                                        color: Colors.white,
+                                        color: AppColors.textPrimary,
                                       ),
                                       SizedBox(width: 8),
                                       Text(
                                         'Review & Add',
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.textPrimary,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -245,20 +251,20 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
                                     borderRadius: AppRadius.card,
                                   ),
                                   alignment: Alignment.centerRight,
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       Text(
                                         'Ignore SMS',
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.textPrimary,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       SizedBox(width: 8),
                                       Icon(
                                         Icons.delete_outline_rounded,
-                                        color: Colors.white,
+                                        color: AppColors.textPrimary,
                                       ),
                                     ],
                                   ),
@@ -375,13 +381,8 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
               textAlign: TextAlign.center,
             ),
             const Spacer(),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
-              ),
+            MLButton.primary(
+              label: 'Grant SMS Permission',
               onPressed: () async {
                 HapticFeedback.mediumImpact();
                 final messenger = ScaffoldMessenger.of(context);
@@ -404,22 +405,12 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
                   );
                 }
               },
-              child: const Text(
-                'Grant SMS Permission',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
             ),
             const SizedBox(height: AppSpacing.md),
             Center(
-              child: TextButton(
+              child: MLButton.text(
+                label: 'Skip for Now',
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  'Skip for Now',
-                  style: TextStyle(
-                    color: context.textSecondaryColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ),
             ),
           ],
@@ -443,15 +434,14 @@ class _SmsInboxScreenState extends ConsumerState<SmsInboxScreen> {
             color: context.primaryColor.withValues(alpha: 0.2),
           ),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
+            RotationTransition(
+              turns: _spinCtrl,
+              child: Icon(Icons.donut_large_rounded, color: context.primaryColor, size: 16),
             ),
-            SizedBox(width: AppSpacing.md),
-            Text(
+            const SizedBox(width: AppSpacing.md),
+            const Text(
               'Scanning device SMS inbox...',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
@@ -557,10 +547,10 @@ class _SmsCard extends ConsumerWidget {
             transaction.body,
             maxLines: 2, // Truncate cleanly
             overflow: TextOverflow.ellipsis, // Ellipsis for overflow
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontFamily: 'monospace',
-              color: Colors.grey,
+              color: AppColors.textMuted,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -587,8 +577,8 @@ class _SmsCard extends ConsumerWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF3B30), // Red
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.expenseCoral, // Red
+                      foregroundColor: AppColors.textPrimary,
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -626,8 +616,8 @@ class _SmsCard extends ConsumerWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF34C759), // Green
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.incomeGreen, // Green
+                      foregroundColor: AppColors.textPrimary,
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),

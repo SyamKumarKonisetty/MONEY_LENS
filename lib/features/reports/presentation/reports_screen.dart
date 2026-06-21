@@ -8,14 +8,12 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-
-import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
+import '../../../core/ui_engine/ui_engine.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../transactions/domain/models.dart';
 import 'providers/reports_provider.dart';
+import 'package:money_lens/core/design/design_system.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
@@ -54,7 +52,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           data: ThemeData.dark().copyWith(
             colorScheme: ColorScheme.dark(
               primary: context.primaryColor,
-              onPrimary: Colors.white,
+              onPrimary: AppColors.textPrimary,
               surface: context.surfaceColor,
               onSurface: context.textPrimaryColor,
             ),
@@ -391,7 +389,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                               Icons.calendar_today_rounded,
                               size: 14,
                               color: filterState.period == TimelinePeriod.custom
-                                  ? Colors.white
+                                  ? AppColors.textPrimary
                                   : context.textSecondaryColor,
                             ),
                             const SizedBox(width: 6),
@@ -400,7 +398,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                               style: AppTypography.bodySmall.copyWith(
                                 color:
                                     filterState.period == TimelinePeriod.custom
-                                    ? Colors.white
+                                    ? AppColors.textPrimary
                                     : context.textSecondaryColor,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -499,7 +497,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     );
                   },
                   loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                      const Center(child: MLSpinner()),
                   error: (err, _) => const SizedBox.shrink(),
                 ),
               ),
@@ -564,7 +562,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         child: Text(
           label,
           style: AppTypography.bodySmall.copyWith(
-            color: isSelected ? Colors.white : context.textSecondaryColor,
+            color: isSelected ? AppColors.textPrimary : context.textSecondaryColor,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -926,7 +924,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         title: '${d.percentage.toStringAsFixed(0)}%',
         radius: 40,
         titleStyle: AppTypography.bodySmall.copyWith(
-          color: Colors.white,
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.bold,
           fontSize: 10,
         ),
@@ -1220,14 +1218,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                           ],
                         ),
                         const SizedBox(height: 6),
-                        ClipRRect(
-                          borderRadius: AppRadius.circularFull,
-                          child: LinearProgressIndicator(
-                            value: d.percentage / 100.0,
-                            minHeight: 5,
-                            backgroundColor: context.surfaceVariantColor,
-                            color: d.category.color,
-                          ),
+                        GradientProgressBar(
+                          value: d.percentage / 100.0,
+                          height: 5,
+                          borderRadius: 2.5,
                         ),
                       ],
                     );
@@ -1307,16 +1301,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          ClipRRect(
-            borderRadius: AppRadius.circularFull,
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 6,
-              backgroundColor: context.surfaceVariantColor,
-              color: saved >= goal
-                  ? context.successColor
-                  : context.primaryColor,
-            ),
+          GradientProgressBar(
+            value: progress.clamp(0.0, 1.0),
+            height: 6,
+            borderRadius: 3.0,
           ),
           const SizedBox(height: 6),
           Text(
@@ -1473,7 +1461,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.primaryColor,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.textPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: AppRadius.circularMd,
@@ -1755,7 +1743,7 @@ class _SetSavingsGoalBottomSheetState
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.primaryColor,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.textPrimary,
                     disabledBackgroundColor: context.surfaceVariantColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -1771,7 +1759,7 @@ class _SetSavingsGoalBottomSheetState
                       color:
                           double.tryParse(_inputAmount) != null &&
                               (double.tryParse(_inputAmount) ?? 0.0) > 0
-                          ? Colors.white
+                          ? AppColors.textPrimary
                           : context.textSecondaryColor,
                     ),
                   ),

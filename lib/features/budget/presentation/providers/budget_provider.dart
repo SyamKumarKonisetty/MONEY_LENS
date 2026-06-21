@@ -19,6 +19,7 @@ final allBudgetsProvider = StreamProvider<List<BudgetEntity>>((ref) {
 });
 
 /// Combines SQLite budgets with live current-month transaction data.
+/// Combines SQLite budgets with live current-month transaction data.
 final liveBudgetsProvider = Provider<List<BudgetEntity>>((ref) {
   final budgetsAsync = ref.watch(allBudgetsProvider);
   final transactions = ref.watch(allTransactionsProvider);
@@ -44,7 +45,7 @@ final liveBudgetsProvider = Provider<List<BudgetEntity>>((ref) {
 
     return budget.copyWith(
       spentAmount: spent,
-      remainingAmount: budget.monthlyLimit - spent,
+      remainingAmount: budget.monthlyLimitEquivalent - spent,
     );
   }).toList();
 });
@@ -71,11 +72,22 @@ class BudgetNotifier extends StateNotifier<AsyncValue<List<BudgetEntity>>> {
     );
   }
 
-  Future<void> setBudget(String category, double limit) async {
+  Future<void> setBudget(
+    String category,
+    double limit, {
+    String period = 'monthly',
+    bool isEnabled = true,
+    bool isArchived = false,
+  }) async {
+    final existing = await _repository.getBudget(category);
     final budget = BudgetEntity(
+      id: existing?.id,
       category: category,
       monthlyLimit: limit,
-      createdAt: DateTime.now(),
+      period: period,
+      isEnabled: isEnabled,
+      isArchived: isArchived,
+      createdAt: existing?.createdAt ?? DateTime.now(),
       updatedAt: DateTime.now(),
     );
     await _repository.setBudget(budget);
@@ -83,6 +95,32 @@ class BudgetNotifier extends StateNotifier<AsyncValue<List<BudgetEntity>>> {
 
   Future<void> setBudgetAmount(double amount, {String? category}) async {
     await setBudget(category ?? 'other', amount);
+  }
+
+  Future<void> toggleBudgetEnabled(int id, bool enabled) async {
+    final list = state.value ?? [];
+    final existing = list.firstWhere((b) => b.id == id);
+    final updated = existing.copyWith(isEnabled: enabled, updatedAt: DateTime.now());
+    await _repository.setBudget(updated);
+  }
+
+  Future<void> toggleBudgetArchived(int id, bool archived) async {
+    final list = state.value ?? [];
+    final existing = list.firstWhere((b) => b.id == id);
+    final updated = existing.copyWith(isArchived: archived, updatedAt: DateTime.now());
+    await _repository.setBudget(updated);
+  }
+
+  Future<void> duplicateBudget(int id, String toCategory) async {
+    final list = state.value ?? [];
+    final existing = list.firstWhere((b) => b.id == id);
+    final duplicated = existing.copyWith(
+      id: null,
+      category: toCategory,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    await _repository.setBudget(duplicated);
   }
 
   Future<void> deleteBudget(int id) async {
@@ -115,8 +153,9 @@ class BudgetSummary {
 /// Provides the active budget summary for the Dashboard and screens.
 final budgetSummaryProvider = Provider<BudgetSummary>((ref) {
   final liveBudgets = ref.watch(liveBudgetsProvider);
-  final totalLimit = liveBudgets.fold(0.0, (sum, b) => sum + b.monthlyLimit);
-  final totalSpent = liveBudgets.fold(0.0, (sum, b) => sum + b.spentAmount);
+  final activeBudgets = liveBudgets.where((b) => b.isEnabled && !b.isArchived).toList();
+  final totalLimit = activeBudgets.fold(0.0, (sum, b) => sum + b.monthlyLimitEquivalent);
+  final totalSpent = activeBudgets.fold(0.0, (sum, b) => sum + b.spentAmount);
   final totalRemaining = totalLimit - totalSpent;
   final usagePercent = totalLimit > 0 ? (totalSpent / totalLimit) * 100.0 : 0.0;
 
@@ -145,7 +184,8 @@ class BudgetAnalytics {
 /// Provides smart analytics metrics for the budgets.
 final budgetAnalyticsProvider = Provider<BudgetAnalytics>((ref) {
   final liveBudgets = ref.watch(liveBudgetsProvider);
-  if (liveBudgets.isEmpty) {
+  final activeBudgets = liveBudgets.where((b) => b.isEnabled && !b.isArchived).toList();
+  if (activeBudgets.isEmpty) {
     return BudgetAnalytics(monthlyUtilizationPercent: 0.0);
   }
 
@@ -157,23 +197,23 @@ final budgetAnalyticsProvider = Provider<BudgetAnalytics>((ref) {
   double maxOverspent = 0.0;
   double minRemainingDiff = double.infinity;
 
-  for (final b in liveBudgets) {
+  for (final b in activeBudgets) {
     // 1. Highest budget
-    if (b.monthlyLimit > maxLimit) {
-      maxLimit = b.monthlyLimit;
+    if (b.monthlyLimitEquivalent > maxLimit) {
+      maxLimit = b.monthlyLimitEquivalent;
       highestBudgetCat = b;
     }
 
     // 2. Most overspent
-    final overspend = b.spentAmount - b.monthlyLimit;
+    final overspend = b.spentAmount - b.monthlyLimitEquivalent;
     if (overspend > maxOverspent) {
       maxOverspent = overspend;
       mostOverspentCat = b;
     }
 
     // 3. Closest to limit
-    if (b.spentAmount < b.monthlyLimit) {
-      final diff = b.monthlyLimit - b.spentAmount;
+    if (b.spentAmount < b.monthlyLimitEquivalent) {
+      final diff = b.monthlyLimitEquivalent - b.spentAmount;
       if (diff < minRemainingDiff) {
         minRemainingDiff = diff;
         closestToLimitCat = b;

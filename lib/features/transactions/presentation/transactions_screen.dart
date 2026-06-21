@@ -1,23 +1,25 @@
+library;
+
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/animated_page_wrapper.dart';
-import '../../../core/widgets/empty_state_widget.dart';
-import '../../../core/widgets/search_bar_widget.dart';
-import '../../../core/extensions/context_extensions.dart';
-import '../../../core/utils/currency_formatter.dart';
-import '../../expenses/presentation/providers/expense_provider.dart';
+import '../../../core/design/design_system.dart';
 import '../../expenses/domain/entities/expense_entity.dart';
+import '../../expenses/presentation/providers/expense_provider.dart';
 import '../domain/models.dart';
 import 'providers/transactions_provider.dart';
-import 'widgets/filter_chip_bar.dart';
-import 'widgets/date_section_header.dart';
-import 'widgets/transaction_list_tile.dart';
 import 'widgets/add_expense_bottom_sheet.dart';
+import 'widgets/detail/transaction_detail_screen.dart';
 import 'widgets/edit_expense_bottom_sheet.dart';
+import 'widgets/filter_sort_bottom_sheet.dart';
+import 'widgets/filters/smart_filter_chips.dart';
+import 'widgets/header/transactions_header.dart';
+import '../../../core/ui_engine/ui_engine.dart';
+import 'widgets/timeline/timeline_section.dart';
 
-/// MoneyLens Transactions Screen with full CRUD integrations.
+/// MoneyLens NEXT — Reimagined Transactions screen assembly.
+///
+/// Implements full timeline grouping, gestures, and premium details transitions.
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
 
@@ -26,11 +28,23 @@ class TransactionsScreen extends ConsumerStatefulWidget {
 }
 
 class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
-  final _scrollController = ScrollController();
+  late final TextEditingController _searchController;
+  late final FocusNode _searchFocusNode;
+  bool _isSearchExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final query = ref.read(transactionSearchQueryProvider);
+    _searchController = TextEditingController(text: query);
+    _searchFocusNode = FocusNode();
+    _isSearchExpanded = query.isNotEmpty;
+  }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -38,329 +52,194 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     showAddTransactionSheet(context);
   }
 
-  void _openEditBottomSheet(
-    BuildContext context,
-    WidgetRef ref,
-    Transaction tx,
-  ) {
+  void _openEditBottomSheet(BuildContext context, WidgetRef ref, Transaction tx) {
     final expenseState = ref.read(expenseNotifierProvider);
     final expense = expenseState.expenses.cast<ExpenseEntity>().firstWhere(
-      (e) => e.id.toString() == tx.id,
-      orElse: () => ExpenseEntity(
-        id: int.tryParse(tx.id),
-        title: tx.title,
-        amount: tx.amount,
-        category: tx.categoryId,
-        notes: tx.note,
-        createdAt: tx.date,
-        updatedAt: tx.date,
-        transactionType: tx.type == TransactionType.income
-            ? 'income'
-            : 'expense',
-      ),
-    );
+          (e) => e.id.toString() == tx.id,
+          orElse: () => ExpenseEntity(
+            id: int.tryParse(tx.id),
+            title: tx.title,
+            amount: tx.amount,
+            category: tx.categoryId,
+            notes: tx.note,
+            createdAt: tx.date,
+            updatedAt: tx.date,
+            transactionType: tx.type.isIncome ? 'income' : 'expense',
+          ),
+        );
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      useRootNavigator: true,
       builder: (context) => EditExpenseBottomSheet(expense: expense),
     );
   }
 
-  void _showDeleteConfirmation(
-    BuildContext context,
-    WidgetRef ref,
-    Transaction tx,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: context.surfaceColor,
-          surfaceTintColor: Colors.transparent,
-          title: Text(
-            'Delete Expense',
-            style: AppTypography.titleLarge.copyWith(
-              color: context.textPrimaryColor,
-            ),
+  Future<void> _deleteTransactionWithUndo(Transaction tx) async {
+    final expenseId = int.tryParse(tx.id);
+    if (expenseId == null) return;
+
+    final expenseState = ref.read(expenseNotifierProvider);
+    final expense = expenseState.expenses.cast<ExpenseEntity>().firstWhere(
+          (e) => e.id == expenseId,
+          orElse: () => ExpenseEntity(
+            id: expenseId,
+            title: tx.title,
+            amount: tx.amount,
+            category: tx.categoryId,
+            notes: tx.note,
+            createdAt: tx.date,
+            updatedAt: tx.date,
+            transactionType: tx.type.isIncome ? 'income' : 'expense',
           ),
-          content: Text(
-            'Are you sure you want to delete this expense of ${CurrencyFormatter.full(tx.amount)}?',
-            style: AppTypography.bodyMedium.copyWith(
-              color: context.textSecondaryColor,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Cancel',
-                style: AppTypography.labelLarge.copyWith(
-                  color: context.textSecondaryColor,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                final id = int.tryParse(tx.id);
-                if (id != null) {
-                  try {
-                    await ref
-                        .read(expenseNotifierProvider.notifier)
-                        .deleteExpense(id);
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Unable to delete transaction'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  }
-                }
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text(
-                'Delete',
-                style: AppTypography.labelLarge.copyWith(
-                  color: context.errorColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
         );
-      },
+
+    try {
+      await ref.read(expenseNotifierProvider.notifier).deleteExpense(expenseId);
+    } catch (e) {
+      if (mounted) {
+        FloatingSnackBar.showError(context, 'Unable to delete transaction');
+      }
+      return;
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Deleted "${expense.title}"'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.card,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          action: SnackBarAction(
+            label: 'Undo',
+            textColor: AppColors.primaryLight,
+            onPressed: () async {
+              await ref.read(expenseNotifierProvider.notifier).addExpense(
+                    title: expense.title,
+                    amount: expense.amount,
+                    category: expense.category,
+                    notes: expense.notes,
+                    transactionType: expense.transactionType,
+                  );
+            },
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  void _openDetailScreen(BuildContext context, Transaction tx) {
+    Navigator.of(context, rootNavigator: true).push(
+      SlideUpRoute(
+        page: TransactionDetailScreen(
+          transaction: tx,
+          onEdit: () => _openEditBottomSheet(context, ref, tx),
+          onDelete: () => _deleteTransactionWithUndo(tx),
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final grouped = ref.watch(groupedTransactionsProvider);
-    final dateKeys = grouped.keys.toList();
-    final filter = ref.watch(transactionFilterProvider);
+    final transactions = ref.watch(filteredTransactionsProvider);
+    final activeSort = ref.watch(transactionSortProvider);
+    final activeDate = ref.watch(transactionDateFilterProvider);
+    final activeCategory = ref.watch(transactionCategoryFilterProvider);
+
+    final hasActiveFilters = activeSort != TransactionSort.newest ||
+        activeDate != TransactionDateFilter.all ||
+        activeCategory != null;
+
+    ref.listen<String>(transactionSearchQueryProvider, (prev, next) {
+      if (_searchController.text != next) {
+        _searchController.text = next;
+      }
+    });
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddBottomSheet(context),
-        backgroundColor: context.primaryColor,
-        elevation: 6,
-        icon: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
-        label: const Text(
-          'Add Expense',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-      ),
-      body: AnimatedPageWrapper(
+      resizeToAvoidBottomInset: true,
+      body: RepaintBoundary(
         child: CustomScrollView(
-          controller: _scrollController,
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // Status bar + title
+            // 1. Header
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  top: AppSpacing.giant,
-                  left: AppSpacing.pagePadding,
-                  right: AppSpacing.pagePadding,
-                  bottom: AppSpacing.xl,
-                ),
-                child: Text(
-                  'Transactions',
-                  style: AppTypography.displayMedium.copyWith(
-                    color: context.textPrimaryColor,
-                  ),
-                ),
+              child: TransactionsHeader(
+                onFilterTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    useRootNavigator: true,
+                    builder: (context) => const FilterSortBottomSheet(),
+                  );
+                },
+                hasActiveFilters: hasActiveFilters,
+                onSearchTap: () {
+                  setState(() {
+                    _isSearchExpanded = !_isSearchExpanded;
+                    if (_isSearchExpanded) {
+                      _searchFocusNode.requestFocus();
+                    } else {
+                      _searchFocusNode.unfocus();
+                      _searchController.clear();
+                      ref.read(transactionSearchQueryProvider.notifier).state = '';
+                    }
+                  });
+                },
+                isSearchActive: _isSearchExpanded || _searchController.text.isNotEmpty,
               ),
             ),
 
-            // Search
-            const SliverToBoxAdapter(child: SearchBarWidget()),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+            // 2. Sticky Search Box
+            if (_isSearchExpanded)
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SearchBarDelegate(
+                  controller: _searchController,
+                  focusNode: _searchFocusNode,
+                  onChanged: (val) {
+                    ref.read(transactionSearchQueryProvider.notifier).state = val;
+                  },
+                ),
+              ),
 
-            // Filters
-            const SliverToBoxAdapter(child: FilterChipBar()),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+            // 3. Quick Glass Category & Type Filters
+            const SliverToBoxAdapter(
+              child: SmartFilterChips(),
+            ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: AppSpacing.sm),
+            ),
 
-            // Empty state or grouped list
-            if (grouped.isEmpty)
+            // 4. Scrollable Grouped Timeline or Empty State
+            if (transactions.isEmpty)
               SliverFillRemaining(
-                child: EmptyStateWidget(
-                  icon: Icons.receipt_long_outlined,
-                  title: filter == TransactionFilter.expense
-                      ? 'No expenses found'
-                      : 'No transactions yet',
-                  subtitle: filter == TransactionFilter.expense
-                      ? 'Try adjusting your filters, or add a new expense.'
-                      : 'Try adjusting your filters, or add a new transaction.',
-                  actionLabel: 'Add Transaction',
+                hasScrollBody: false,
+                child: EmptyStateView(
+                  theme: EmptyStateTheme.wallet,
+                  title: 'Your financial journey starts here.',
+                  subtitle: 'Try adjusting your filters, or log a new transaction.',
+                  actionLabel: 'Add First Transaction',
                   onAction: () => _openAddBottomSheet(context),
-                  accentColor: const Color(0xFF007AFF),
                 ),
               )
             else
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, sectionIndex) {
-                  final dateKey = dateKeys[sectionIndex];
-                  final items = grouped[dateKey]!;
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DateSectionHeader(dateLabel: dateKey),
-                      ...items.asMap().entries.map((entry) {
-                        final tx = entry.value;
-                        return StaggeredListItem(
-                          index: entry.key + (sectionIndex * 3),
-                          baseDelay: 50,
-                          child: Dismissible(
-                            key: Key(tx.id),
-                            direction: DismissDirection.endToStart,
-                            onDismissed: (direction) async {
-                              final expenseId = int.tryParse(tx.id);
-                              if (expenseId != null) {
-                                final expenseState = ref.read(
-                                  expenseNotifierProvider,
-                                );
-                                final expense = expenseState.expenses
-                                    .cast<ExpenseEntity>()
-                                    .firstWhere(
-                                      (e) => e.id == expenseId,
-                                      orElse: () => ExpenseEntity(
-                                        id: expenseId,
-                                        title: tx.title,
-                                        amount: tx.amount,
-                                        category: tx.categoryId,
-                                        notes: tx.note,
-                                        createdAt: tx.date,
-                                        updatedAt: tx.date,
-                                        transactionType:
-                                            tx.type == TransactionType.income
-                                            ? 'income'
-                                            : 'expense',
-                                      ),
-                                    );
-
-                                try {
-                                  await ref
-                                      .read(expenseNotifierProvider.notifier)
-                                      .deleteExpense(expenseId);
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Unable to delete transaction',
-                                        ),
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  }
-                                  return;
-                                }
-
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).clearSnackBars();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Deleted "${expense.title}"',
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                      backgroundColor: context.isDark
-                                          ? const Color(0xFF1C1C1E)
-                                          : Colors.white,
-                                      elevation: 4,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      action: SnackBarAction(
-                                        label: 'Undo',
-                                        textColor: context.primaryColor,
-                                        onPressed: () async {
-                                          await ref
-                                              .read(
-                                                expenseNotifierProvider
-                                                    .notifier,
-                                              )
-                                              .addExpense(
-                                                title: expense.title,
-                                                amount: expense.amount,
-                                                category: expense.category,
-                                                notes: expense.notes,
-                                                transactionType:
-                                                    expense.transactionType,
-                                              );
-                                        },
-                                      ),
-                                      duration: const Duration(seconds: 4),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                            background: Container(
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(
-                                right: AppSpacing.xl,
-                              ),
-                              decoration: BoxDecoration(
-                                color: context.errorColor.withValues(
-                                  alpha: 0.15,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'Delete',
-                                    style: TextStyle(
-                                      color: context.errorColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(width: AppSpacing.sm),
-                                  Icon(
-                                    Icons.delete_rounded,
-                                    color: context.errorColor,
-                                    size: 20,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            child: GestureDetector(
-                              onTap: () =>
-                                  _openEditBottomSheet(context, ref, tx),
-                              onLongPress: () =>
-                                  _showDeleteConfirmation(context, ref, tx),
-                              child: TransactionListTile(transaction: tx),
-                            ),
-                          ),
-                        );
-                      }),
-                      const Padding(
-                        padding: EdgeInsets.only(
-                          left: 84,
-                          right: AppSpacing.pagePadding,
-                        ),
-                        child: Divider(height: 1),
-                      ),
-                    ],
-                  );
-                }, childCount: dateKeys.length),
+              SliverToBoxAdapter(
+                child: TimelineSection(
+                  transactions: transactions,
+                  onTap: (tx) => _openDetailScreen(context, tx),
+                  onEdit: (tx) => _openEditBottomSheet(context, ref, tx),
+                  onDelete: _deleteTransactionWithUndo,
+                ),
               ),
 
             const SliverToBoxAdapter(
@@ -370,5 +249,55 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         ),
       ),
     );
+  }
+}
+
+class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final ValueChanged<String> onChanged;
+
+  _SearchBarDelegate({
+    required this.controller,
+    required this.focusNode,
+    required this.onChanged,
+  });
+
+  @override
+  double get minExtent => 64.0;
+
+  @override
+  double get maxExtent => 64.0;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
+        child: Container(
+          color: AppColors.backgroundDark,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pagePadding,
+            AppSpacing.sm,
+            AppSpacing.pagePadding,
+            AppSpacing.sm,
+          ),
+          alignment: Alignment.center,
+          child: GlassSearch(
+            controller: controller,
+            focusNode: focusNode,
+            onChanged: onChanged,
+            compact: false,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _SearchBarDelegate oldDelegate) {
+    return oldDelegate.controller != controller ||
+        oldDelegate.focusNode != focusNode ||
+        oldDelegate.onChanged != onChanged;
   }
 }

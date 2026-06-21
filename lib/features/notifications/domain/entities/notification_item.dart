@@ -1,4 +1,3 @@
-
 String normalizeDate(String input) {
   final parts = input.split('-');
   if (parts.length != 3) return input;

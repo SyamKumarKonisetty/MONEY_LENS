@@ -154,3 +154,102 @@ final monthlyTrendsProvider = Provider<List<MonthlyTrend>>((ref) {
 
   return trends;
 });
+
+class AnalyticsInsights {
+  final Transaction? largestExpense;
+  final double averageDailySpend;
+  final double weeklyComparisonPercentage;
+  final double currentWeekTotal;
+  final double previousWeekTotal;
+
+  AnalyticsInsights({
+    required this.largestExpense,
+    required this.averageDailySpend,
+    required this.weeklyComparisonPercentage,
+    required this.currentWeekTotal,
+    required this.previousWeekTotal,
+  });
+}
+
+final analyticsInsightsProvider = Provider<AnalyticsInsights>((ref) {
+  final all = ref.watch(allTransactionsProvider);
+  final period = ref.watch(analyticsPeriodProvider);
+  final now = DateTime.now();
+
+  // 1. Filter expenses in current period
+  final periodExpenses = all
+      .where(
+        (t) =>
+            _isWithinPeriod(t.date, period, now) &&
+            t.type == TransactionType.expense,
+      )
+      .toList();
+
+  // 2. Largest Expense
+  Transaction? largest;
+  if (periodExpenses.isNotEmpty) {
+    largest = periodExpenses.reduce(
+      (curr, next) => curr.amount > next.amount ? curr : next,
+    );
+  }
+
+  // 3. Average Daily Spend (pro-rated by elapsed days)
+  final totalSpent = periodExpenses.fold(0.0, (sum, t) => sum + t.amount);
+  int elapsedDays = 1;
+  switch (period) {
+    case AnalyticsPeriod.week:
+      elapsedDays = 7;
+      break;
+    case AnalyticsPeriod.month:
+      elapsedDays = now.day;
+      break;
+    case AnalyticsPeriod.year:
+      final startOfYear = DateTime(now.year, 1, 1);
+      elapsedDays = now.difference(startOfYear).inDays + 1;
+      if (elapsedDays > 365) elapsedDays = 365;
+      break;
+  }
+  final avgDaily = elapsedDays > 0 ? totalSpent / elapsedDays : 0.0;
+
+  // 4. Weekly Summary Comparison (past 7 days vs previous 7 days)
+  final todayStart = DateTime(now.year, now.month, now.day);
+  final currentWeekStart = todayStart.subtract(const Duration(days: 7));
+  final previousWeekStart = todayStart.subtract(const Duration(days: 14));
+
+  final curWeekTotal = all
+      .where(
+        (t) =>
+            t.type == TransactionType.expense &&
+            t.date.isAfter(
+              currentWeekStart.subtract(const Duration(seconds: 1)),
+            ) &&
+            t.date.isBefore(now.add(const Duration(seconds: 1))),
+      )
+      .fold(0.0, (sum, t) => sum + t.amount);
+
+  final prevWeekTotal = all
+      .where(
+        (t) =>
+            t.type == TransactionType.expense &&
+            t.date.isAfter(
+              previousWeekStart.subtract(const Duration(seconds: 1)),
+            ) &&
+            t.date.isBefore(currentWeekStart),
+      )
+      .fold(0.0, (sum, t) => sum + t.amount);
+
+  double comparisonPct = 0.0;
+  if (prevWeekTotal > 0.0) {
+    comparisonPct = ((curWeekTotal - prevWeekTotal) / prevWeekTotal) * 100;
+  } else if (curWeekTotal > 0.0) {
+    comparisonPct = 100.0;
+  }
+
+  return AnalyticsInsights(
+    largestExpense: largest,
+    averageDailySpend: avgDaily,
+    weeklyComparisonPercentage: comparisonPct,
+    currentWeekTotal: curWeekTotal,
+    previousWeekTotal: prevWeekTotal,
+  );
+});

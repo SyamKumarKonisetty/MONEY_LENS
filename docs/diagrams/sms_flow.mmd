@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant OS as Android OS
+    participant Broadcast as SMS Receiver
+    participant RegEx as Parsing Engine
+    participant Inbox as Pending DB
+    participant User as User UI
+    participant Ledger as Main DB
+    
+    OS->>Broadcast: Incoming SMS
+    Broadcast->>RegEx: String Payload
+    RegEx->>RegEx: Check Bank Filters
+    RegEx->>Inbox: Insert Pending Transaction
+    Inbox-->>User: Show Badge Notification
+    User->>Inbox: Review & Tap Approve
+    Inbox->>Ledger: Move to Transactions Table

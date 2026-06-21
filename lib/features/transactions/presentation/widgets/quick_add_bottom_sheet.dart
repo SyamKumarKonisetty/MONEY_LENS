@@ -8,6 +8,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../expenses/presentation/providers/expense_provider.dart';
 import '../../domain/models.dart';
+import '../../../../design_system/components/buttons.dart';
 
 /// Shows the lightweight Quick Add sheet for a pre-selected category.
 void showQuickAddSheet(BuildContext context, Category category) {
@@ -16,6 +17,7 @@ void showQuickAddSheet(BuildContext context, Category category) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     useSafeArea: false,
+    useRootNavigator: true,
     builder: (_) => QuickAddBottomSheet(category: category),
   );
 }
@@ -363,42 +365,11 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            // Submit Button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _amount > 0 && !_isSaving ? _submit : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.category.color,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: context.surfaceVariantColor,
-                  disabledForegroundColor: context.textSecondaryColor
-                      .withValues(alpha: 0.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppRadius.circularMd,
-                  ),
-                  elevation: 0,
-                ),
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                        ),
-                      )
-                    : const Text(
-                        'Save Transaction',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-              ),
+            MLButton.primary(
+              label: 'Save Transaction',
+              onPressed: _submit,
+              isLoading: _isSaving,
+              isDisabled: _amount <= 0 || _isSaving,
             ),
           ],
         ),

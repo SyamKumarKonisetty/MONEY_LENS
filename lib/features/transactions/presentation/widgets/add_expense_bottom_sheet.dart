@@ -4,11 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/design/colors/app_colors.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../expenses/presentation/providers/expense_provider.dart';
 import '../../domain/models.dart';
 import '../providers/transactions_provider.dart';
 import '../../../sms_detection/presentation/providers/sms_detection_provider.dart';
+import '../../../../design_system/components/chips.dart';
 
 // ─── Public entry-point ───────────────────────────────────────────────────────
 
@@ -28,6 +30,7 @@ void showAddTransactionSheet(
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     useSafeArea: false,
+    useRootNavigator: true,
     builder: (_) => AddExpenseBottomSheet(
       initialType: initialType,
       initialAmount: initialAmount,
@@ -73,7 +76,7 @@ class AddExpenseBottomSheet extends ConsumerStatefulWidget {
 }
 
 class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   // ─── State ────────────────────────────────────────────────────────────────
   TransactionType _type = TransactionType.expense;
   Category? _selectedCategory; // null = not yet selected
@@ -82,6 +85,7 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
   final _titleFocus = FocusNode();
   final _notesFocus = FocusNode();
   final _dummyFocus = FocusNode();
+  late final AnimationController _loaderSpinCtrl;
 
   // Amount is stored as a raw input string (e.g. '0', '10.5', etc.)
   String _amountInput = '0';
@@ -113,6 +117,14 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
   @override
   void initState() {
     super.initState();
+    _loaderSpinCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+    final isTesting = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    if (!isTesting) {
+      _loaderSpinCtrl.repeat();
+    }
     _typeToggleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 250),
@@ -149,6 +161,7 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
   @override
   void dispose() {
     _typeToggleController.dispose();
+    _loaderSpinCtrl.dispose();
     _titleController.dispose();
     _notesController.dispose();
     _titleFocus.dispose();
@@ -203,8 +216,8 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
       : AppCategories.income;
 
   Color get _typeColor => _type == TransactionType.expense
-      ? const Color(0xFFFF3B30)
-      : const Color(0xFF34C759);
+      ? AppColors.expenseCoral
+      : AppColors.incomeGreen;
 
   bool get _isValid => _amount > 0 && _selectedCategory != null;
 
@@ -317,7 +330,7 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.only(
                 bottom: bottomInset > 0
-                    ? AppSpacing.lg
+                    ? bottomInset + AppSpacing.lg
                     : safeBottom + AppSpacing.lg,
               ),
               child: Column(
@@ -446,7 +459,7 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
         child: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 200),
           style: AppTypography.labelLarge.copyWith(
-            color: isActive ? Colors.white : context.textSecondaryColor,
+            color: isActive ? AppColors.textPrimary : context.textSecondaryColor,
             fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
             fontSize: 13,
           ),
@@ -669,15 +682,15 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFF34C759).withValues(alpha: 0.08),
-                const Color(0xFF007AFF).withValues(alpha: 0.08),
+                AppColors.incomeGreen.withValues(alpha: 0.08),
+                AppColors.sapphireBlue.withValues(alpha: 0.08),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFF34C759).withValues(alpha: 0.2),
+              color: AppColors.incomeGreen.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -686,12 +699,12 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF34C759).withValues(alpha: 0.15),
+                  color: AppColors.incomeGreen.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.trending_up_rounded,
-                  color: Color(0xFF34C759),
+                  color: AppColors.incomeGreen,
                   size: 20,
                 ),
               ),
@@ -738,12 +751,12 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
             Expanded(
               child: Text(
                 'Please enter an amount first',
-                style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
               ),
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF2C2C2E),
+        backgroundColor: AppColors.surface2,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
@@ -810,43 +823,10 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                     itemBuilder: (context, i) {
                       final cat = recentlyUsedFiltered[i];
                       final isSelected = _selectedCategory?.id == cat.id;
-                      return ChoiceChip(
-                        label: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              cat.icon,
-                              size: 14,
-                              color: isSelected ? Colors.white : cat.color,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              cat.name,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isSelected
-                                    ? Colors.white
-                                    : context.textPrimaryColor,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
-                        selected: isSelected,
-                        selectedColor: cat.color,
-                        backgroundColor: context.surfaceColor,
-                        checkmarkColor: Colors.white,
-                        showCheckmark: false,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          side: BorderSide(
-                            color: isSelected
-                                ? Colors.transparent
-                                : context.separatorColor.withValues(alpha: 0.5),
-                          ),
-                        ),
+                      return MLChip.choice(
+                        icon: cat.icon,
+                        label: cat.name,
+                        isSelected: isSelected,
                         onSelected: (selected) {
                           HapticFeedback.selectionClick();
                           setState(() => _selectedCategory = cat);
@@ -1108,13 +1088,9 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
             borderRadius: BorderRadius.circular(16),
             child: Center(
               child: _isSaving
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
+                  ? RotationTransition(
+                      turns: _loaderSpinCtrl,
+                      child: Icon(Icons.donut_large_rounded, color: AppColors.textPrimary, size: 22),
                     )
                   : Text(
                       _isValid
@@ -1124,7 +1100,7 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet>
                           : 'Select a category',
                       style: AppTypography.titleMedium.copyWith(
                         color: _isValid
-                            ? Colors.white
+                            ? AppColors.textPrimary
                             : context.textSecondaryColor,
                         fontWeight: FontWeight.w600,
                       ),

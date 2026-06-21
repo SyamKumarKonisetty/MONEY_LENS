@@ -27,6 +27,9 @@ class Budgets extends Table {
   RealColumn get remainingAmount => real().withDefault(const Constant(0.0))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  TextColumn get period => text().withDefault(const Constant('monthly'))();
+  BoolColumn get isEnabled => boolean().withDefault(const Constant(true))();
+  BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
 }
 
 /// SQLite SavingsGoals table definition.
@@ -60,7 +63,7 @@ class AppDatabase extends _$AppDatabase {
   static final AppDatabase instance = AppDatabase();
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -84,6 +87,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 7) {
         await m.createTable(rawSmsTable);
+      }
+      if (from < 8) {
+        await m.addColumn(budgets, budgets.period);
+        await m.addColumn(budgets, budgets.isEnabled);
+        await m.addColumn(budgets, budgets.isArchived);
       }
     },
   );
