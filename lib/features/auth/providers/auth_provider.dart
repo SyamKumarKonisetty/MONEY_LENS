@@ -40,7 +40,9 @@ class AuthNotifier extends ChangeNotifier {
       _prefs.getString('recovery_answer_hash') != null;
   bool get isSmsSetupCompleted => true;
   bool get isAuthenticated => _sessionAuthenticated;
-
+  bool get hasAcceptedTerms => _prefs.getBool('terms_accepted') ?? false;
+  bool get hasCompletedPermissions =>
+  _prefs.getBool('permissions_completed') ?? false;
   String? get selectedBank => _prefs.getString('selected_bank');
   String? get sampleDebitSms => _prefs.getString('sms_sample_debit');
   String? get sampleCreditSms => _prefs.getString('sms_sample_credit');
@@ -125,6 +127,7 @@ class AuthNotifier extends ChangeNotifier {
     _prefs.remove('auth_pin');
     _prefs.remove('recovery_answer_hash');
     _prefs.remove('profile_type');
+    _prefs.remove('terms_accepted');
     _sessionAuthenticated = false;
     notifyListeners();
   }
@@ -145,6 +148,16 @@ class AuthNotifier extends ChangeNotifier {
     _sessionAuthenticated = false;
     notifyListeners();
   }
+  void acceptTerms() {
+  _prefs.setBool('terms_accepted', true);
+  notifyListeners();
+}
+  void completePermissions() {
+  _prefs.setBool('permissions_completed', true);
+  notifyListeners();
+}
+
+_prefs.remove('permissions_completed');
 }
 
 final authNotifierProvider = ChangeNotifierProvider<AuthNotifier>((ref) {

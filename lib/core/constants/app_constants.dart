@@ -24,6 +24,8 @@ class AppConstants {
   static const String routeAnalytics = '/analytics';
   static const String routeSettings = '/settings';
   static const String routeBudget = '/budget';
+  static const String routeTerms = '/terms';
+  static const String routePermissions = '/permissions';
   static const String routeReports = '/reports';
   static const String routeNotifications = '/notifications';
   static const String routeSmsInbox = '/smart-inbox';
